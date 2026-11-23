@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Stand Clear autoplay test</title>
+<style>body{margin:0;display:flex;gap:12px;font:12px monospace} iframe{width:390px;height:844px;border:0;flex:none} pre{white-space:pre-wrap;margin:0;padding:8px}</style>
+</head>
+<body>
+<!--
+This page plays Stand Clear by itself and logs every screen, so the whole
+game can be checked without tapping. It is a test tool, not part of the game.
+Address options:
+  ?wrong=2,5   answer questions 2 and 5 wrong (the rest right)
+  ?stop=12     stop after 12 steps, to take a picture of that screen
+  ?seed=7      pick a different random ride
+-->
+<iframe id="g"></iframe>
+<pre id="log"></pre>
+<script>
+const q = new URLSearchParams(location.search);
+const wrong = new Set((q.get('wrong') || '').split(',').filter(Boolean).map(Number));
+const stopAt = +(q.get('stop') || 999);
+let seed = +(q.get('seed') || 7);
+// This skips the password screen inside the test only.
+localStorage.setItem('arcade-unlocked', 'bfed218da355d62626d39a5790fd14ed2b10d5d63efee32c834a8e937d7e90d9');
+const log = [];
+const out = () => { document.getElementById('log').textContent = log.join('\n'); };
+const g = document.getElementById('g');
+g.src = '../../games/stand-clear/?test';
+const wait = t => new Promise(r => setTimeout(r, t));
+
+g.onload = async () => { try {
+  const W = g.contentWindow, d = g.contentDocument;
+  // Headless Chrome skips animation frames, so a timer stands in for them here.
+  W.requestAnimationFrame = cb => W.setTimeout(() => cb(W.performance.now()), 16);
+  W.Math.random = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  W.onerror = (m) => { log.push('ERROR ' + m); out(); };
+  const ready = async () => {
+    for (let i = 0; i < 400; i++) {
+      if (!W.eval("state").busy && W.getComputedStyle(d.getElementById('cc')).opacity === '1' && d.querySelector('#cc [data-k]')) return true;
+      await wait(50);
+    }
+    return false;
+  };
+  const snap = () => {
+    const t = id => d.getElementById(id).textContent;
+    return `${t('sNote') ? '[' + t('sNote') + '] ' : ''}${t('sLab')} / ${t('sName')} {${[...d.querySelectorAll('#sBuls .bl')].map(b => b.textContent).join('')}} || ` +
+      d.getElementById('cc').innerText.replace(/\n+/g, ' / ').slice(0, 220);
+  };
+  d.getElementById('go').click();
+  let step = 0, transfers = 0;
+  while (step < stopAt) {
+    if (!(await ready())) { log.push('STUCK at step ' + step + ': ' + snap()); break; }
+    const s = snap();
+    // The same screen twice in a row means a tap landed during a fade. Wait and look again.
+    if (s === log.lastSnap) { await wait(200); continue; }
+    log.lastSnap = s;
+    step++;
+    log.push(step + '. ' + s);
+    out();
+    if (step >= stopAt) break;
+    const cc = d.getElementById('cc');
+    const click = k => cc.querySelector(`[data-k="${k}"]`).click();
+    if (cc.querySelector('.opt')) {
+      // This is a question. Answer right unless this question is on the wrong list.
+      const qn = W.eval("state").question;
+      const opts = [...cc.querySelectorAll('.opt')];
+      const keys = opts.map(o => o.dataset.k);
+      // The test reads the right answer from the game's own question object.
+      const ans = W.eval("state").q.answer;
+      const pickKey = wrong.has(qn) ? keys.find(k => k.slice(2) !== ans) : keys.find(k => k.slice(2) === ans);
+      log.push(`   answered ${wrong.has(qn) ? 'WRONG' : 'right'}: ${pickKey.slice(2)} (answer ${ans})`);
+      cc.querySelector(`[data-k="${pickKey}"]`).click();
+    } else if (cc.querySelector('[data-k="go"]')) click('go');
+    else if (cc.querySelector('[data-k="home"]')) { log.push('END SCREEN trip: ' + d.getElementById('trip').innerText.replace(/\n+/g, ' / ')); break; }
+    else if (cc.querySelector('.dir')) {
+      const dirs = [...cc.querySelectorAll('.dir:not(.last)')];
+      const lines = [...cc.querySelectorAll('.linebtn')];
+      // On the first transfer, try a different line, then board its first direction.
+      const onLine = d.querySelector('.linebtn.on');
+      const want = lines[(transfers * 3 + 1) % lines.length];
+      if (lines.length > 1 && onLine !== want && !want.classList.contains('on')) {
+        want.click();
+        await wait(100);
+      }
+      const ds = [...cc.querySelectorAll('.dir:not(.last)')];
+      log.push('   boarding: ' + ds[transfers % ds.length].textContent);
+      ds[transfers % ds.length].click();
+    } else if (cc.querySelector('[data-k="stay"]') || cc.querySelector('[data-k="xfer"]')) {
+      // Transfer every other time, so both paths get tested.
+      if (cc.querySelector('[data-k="xfer"]') && (step % 2 === 0 || !cc.querySelector('[data-k="stay"]'))) { transfers++; click('xfer'); }
+      else click('stay');
+    }
+    await wait(80);
+  }
+  log.push('DONE');
+  out();
+  document.title = 'done';
+  } catch (e) { log.push('TEST ERROR ' + e.stack); out(); }
+};
+</script>
+</body>
+</html>

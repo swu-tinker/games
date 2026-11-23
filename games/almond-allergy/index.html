@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Almond Allergy</title>
+<!-- This line tells phone browsers to color their own bars mint, like the page. -->
+<meta name="theme-color" content="#cdeedd">
+<!-- This line keeps search engines from listing the game. -->
+<meta name="robots" content="noindex">
+<!-- This line loads the password screen shared by every game. -->
+<script src="../../gate.js"></script>
+
+<!-- ============================== CSS ============================== -->
+<style>
+  /* The Press Start 2P pixel font (SIL Open Font License), the same one the
+     arcade home page uses. It is saved inside this file so the game loads nothing
+     from the internet. It has one weight, so the weight range below stops the
+     browser from making a smeared fake bold. */
+  @font-face {
+    font-family: "Press Start 2P";
+    font-weight: 100 900;
+    src: url(data:font/woff2;base64,d09GMgABAAAAABJgAA0AAAAASFgAABILAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGhYcgzwGYACEbBEICvB00n4Lg0QAATYCJAOGdAQgBYRKB4ReG7k2IxE1HRM1iOA/JWg2xvD6obMqmE5SN4m6JErQGe1cnR7tTm21roiCRXGDph2W57zlE2hWfkyCDRZhurA4QpJZeJ7fH3Xufd9jvYGwAJrkBDcnoU4JS7aJ6zQ4wEsveVcau6YSMNkW5dRZkKLO7kl2gJ99Pu1cgBXilsXzxNXe312wJuAISuQ69LpAmygPOJGMosbv9O8fKPBxUDdsnCIs31VPLCJq8pmJK+q+O4R4UVF6lcpGGsmA+ctVGunAV3/7FmaFSTNZmPJ92eQtKF2y1Rr6/y1N6Yx01bXAVlgCUKk8KMZpgFl/5u/37Gi0sVYrvVtZ7nK74tp2Vme/ldxrAoNKh86llIYaDKq0FUKDyIWF4gAe22ycgtZjjJuJs/Vp39+v74B3YB+yQ62hxBJjrLUTa+Sy99Pd99cEAbEAQLyFMgwBkam6oK3xU+ciNfPcvhE6mZDmqLkWqDD0n1OuQAhC9KYOn4NBoU/niabLNmzGoo/+xw1ug9G9ztasWoJO56Zl61ETp6VJm7R+cvD8ZkwUIyroOEAERD5UKipJnfOhLrSmENhSWc6QqDOfQyh0tj+jiuXZ/8PnSYaaAyFm4rtroNK5XussnBuyoeJ5zoC6dKczmSccloW4oypBxUAoF5sxFQLcirAInR1MZjcgX4k1EysGSJ2M5k6neut6/27mwJd9UgEBelYHgCn+hjJAKlssT6Nb+z7hmPbscWyAorp5AYB5SJwFuA5AnyFHrMaflApHNJ7x+9UCg5cKiFNPUZr/iKRY64ru6S29YxCbarNtvi2yZbbLjsVGDlfh+VP9sQ79ByCOJUFJRyTFKnpWsDWbaXOvr/N7If+vgBkAhrjBYK4NDee34PsV+L4WIZYBuvuPvincl783AAKgATDVFSAXRr6c3JrN/3HGVa0aLTpwRps+/SqsqTWkSYca7bZt2tLsNLxYcRIkYXPIYUecwAHDhRsvUeIkSJIiTYEiJcpU9ajU66pOd6nRo8+QMQuWrFhz5MSZKzceAgQJFiJMuBix4sRL0uWybrvmNJi3bMGKK86547xUI/YMu+CeS3YUKXbTvrOq3FIozagypcq1IHN5Ir5QjHhpmDBjwe6oY45jwEMQH37CBKwTIk+GLDkqxITSok6DDk3adBkwZ8KUGQe27Ngz4s6HJy9+vG3wFS1CpCgJAiUS4W/QgElTJiDk/98A4AcAuQPyAZJ2ACkvAB6oAIABACppDAYfuDIBBwdtvWyhIRj9eiPiRtE2zhO4kUR6xplwhByIGdHEfl2lnhqraTbpW3ibCwPlFbCkAFDqFEs+ouId4rDYFIx3Rgp1JviWVtp0gLoZoOHhudAa3lXMO58l1rNuCTB3bALXXGnb/nuVbib5zIAjGHU0I+vqIX3dp0pfZIhBAJldd9NXY27Td77KTu2odNh1bNd/MmxWU60SgwDYrbYVsG5SAHPc3OnXRDqZZx5AN4/b+QP23IQU1ololz89jHe+3vpcMkt0lwM/573pXzp9PbXfizZscl0ELXO3a1UbZW84hcdS+ygg252g2kqvjynC9Zz5uT51374IQGxoIViy+r1aO2cyM1kuabuu5YAzwR0QDOVNMNfejiJ58vbRAC0ACLPuM673tXdTiQJqCKUJCSkIhFMSVoRCcGriaPVLaSFOCpqoMooEDSlcYkRUz4XwkApimZR+FhfXwZA7MYXyScHaPDaFYc9ss7gM5ZYs1QwfQMYZkEJYRVaGwLrE3ZDOqopH0WKhrKYyn5jgFnBKR8aVHwy1EDwOxPWwMKq6LAwr4eYDjbhnmEePgsSAzHtLsGN2LkSLRIgzniTDyUNzR6G8Ek9CE6wMyORehlJUVkKLRUvDhjbMGHMpCvC6v2xgNRXAwggUCRJ7PYSgTV5RpEvG1kdpwglup8CaTjp0/tZdr1688A6jRiAAYkX2jYaGI2yEUED4agQ4JpDdlCU2KgqlAuYHCKlez0mlj0QvcpGO1NK3dCvyfsXpVCbst9GllNVsQ/m0ecUNbEvtYUVwoaaijNyRgJRbfvMoDLqOhDUhD6bAXNSUZNyJX5IekmQF0UTzLC7AZFlcCQmxLmpK1rQZ1SDkaC+d0IVasLlKGNSTvKgXcxoCTsoYtZLGBXO0cUdZAhJxAg+O4C9r2GC83qogpN6xJx2xIGwwFrEk9VR+tHKBggk6U1LmwfkF1dp8yUJX3ga9eH9YtsMWX5wQqUZ21yGWFNq9ajBoEVsoSz36d5cSzFLbAJZ5HBsmU2S1hKJbU3Wc79U6Nu0xgKAelp0Z4jqLRPumclG2eKPlL+r190iKNpW7y5sA7cqgGMvWIEl+SE0N0tmH8mlGSxpVQE9Urd3YqVrA4oAp+2BKXB2A9K0eTRqj3WAoGXskoL132wA2/MvgLLOL0yqYLSBZEKCPLV8PkjVdB1SZ2IaBQd0U2Dakfm5sFl48kBeNEFPjhuqccG1xKdLMwtZahGBvKKj6sjd4NlQ2UZAigsnBtsxkmBAUrlaQNUGBWoRSctWWPDeHg9iWFt953iW8s41nKaqZgHL5RcUdtBmY0DFS28bLdxTjSGv0Ny4ptkZdtFbyxfXlBPJDC4Ka2InUcWZ417DMcPZAbTE6gjA8DIy0MWAeNVYPa4tlrhwoNDFkIcAYzAytW7JuIRhZsd7KzTSi50qCGnCvLdArficHWmmiCSHD/ERsIt1qdKQoYJHWYU6i20IBgh6JxJBmjvp7VLIwpFuZVnPEYIUCAskhO76ejxt9JGFxxlGRPKmMLhhBMW5gFMreRedqpVDNopuVpA5k2WxxghipqIfCBeIQRbeLoJs/OepnCw3rhRJpLwo3B29Qq6EQM9waX0tDbZe40xbbQ8/Qa5GCtQc+yGI3ByXFWSYyj81HTC3W1zqV4c3rHdDDtnUb32qt2mopLZvM3ZEnvGTljav/AAf3pR20pETliLUD5zAcEqZRuQ9zKv2DmWBzQez4zdVKH+VrRaAdiE1/2ETrXlpfGErt8QoFgzpPFunNUSa4VWFHgoo0idkyGesoICEQZhHswBR91la3rV3gEjWmUsVVpknJ6pmHX/KmF43M4y/mWPbQU4884NT8oSZ5LwGogx9eW6Gg7lmG/eALtL62Cp9ZUfqamgDfQ7nZ8bGexsAjpAPQHi/0A1pEaFHLboEV7d7dlF4Wbk7rt4KwRSduRJ4z0D893esysc4j7AYVAWuIKyXUddVmqQXZGi4jTAKLOSCwevool+taG4JeINVM5C9/6RKRoAwBZkHGFI/KetWPFCwGXCty3kllWldUY5t/MES0hG3Ha/tc6iFbK775b3PmP/6oxozEvPtWJK7CZJoPNvFwsXLq6RSsjK/OMOpSWGfdXTUUFhBOgAJILasEIC5mwLtlTPxoSoULOiJOa+8v6Dv5BrFchoD8fhVln2F87NH/B/mdN+WJ4DnP9UwOEZPJK3/7wNukPDMoq25+jO5DwuuANDPcW1YujJBA9wCSgw/8hen1aZwisQxxavv9nRFeeQ92LxUGPVGqmTPyNfIsbV5bpsOY5Zn7Cg7jmCvvKM055v3uQzHXQLfeJrTPa109NFJ030JNeFlVetcMGlNOVKhvhUzlCtCsKDcCRJFpo5FhHNpN3SVrrjbYoI4HLifJ0rYu4Qb3LM/gr95bjW2mvJxLSMwkrwkCVPbopYjpdwP9xOkFMwa5FkCOe25XVib8XSGvVIU5K1FfIlZ6K1l9nWjBqt8PSMTirPC+1WzipXQWgAeIBGev81ZJnSRzIe9URfVr8idW4VjoLi+ZiXaEr/9mAzAS/Epx1d5AgoU39Q0OqJTKc64NLg31Kbw++PLxlBz11UYvg93MTzlOTfCrms73QWn0HAWZlactcaDAjplYhAX1YEZdo8rBS/IHZ4oHSETVB+rHBwqhStc6AMQk5XmS6yhCfQXDgrAKDHX7EMzXxdeuOGcWDvl+QyTWUV8wt7se4jmo3csmwcjmsUUkxaa+ZH57WZEEC3kbDqgAReeRoFq6CoesJJ6pB6YvQVcBI0VeS3R9p8NLwpdzcbpV3PvfOwhKDol+mGS4O9MwFVeFDXm0AYvD7dgFnYOG3jRV9XiF4FecuOnM8CRU2vpkopbhKx7KfarCpzaTBFlfv/kfJxMN61HC6Xr3REx7WKz1hnFoxwCTW0XLpk0fPXYC1ErjyY/nY9l+Uvt5rkq6dNytY3UsitNePuss4/wnPo8xLKo75akhjLhUPAjjblOpnjfObJI5bvxrdCKY6sI/XycSypfTlSJWcI2PPdg3Xn7OwgjEJh4Y1AejzXCCNtAGaV4nk8eI9z9dXXZARXv7WVklkuvtdphJvRTe0U/xAawWvJyG+RLhGZ0ZFQvz4wgiRfMWkEFuhqeQSccJ5XPBW6YYaQv3qURhivQHhS7J91v2gf+6vPLp79wn47pD1rAckkBiNknOOtbOcYZNonH8SE14tzCdXq2skwcM4mu+UmA+hdubYq/yYFyppJZRX+l5LYV9teDdwZwji+o8AlhWkZsGcQ4YCKMIcGUs6tn8b3Vqj7pi7T67hgd/hShh7hbiYPL0FbuZrb3NaOSleDv2iNecJ0otEvBme7gEwrPYXLSXB37EQEt6DzeEeMkZzjZDR/roZl7PmFX4Hq4fu+9foRncGLo0G1y/iKBLOV/JVrvYj7o1K4r7I4mcsGHwlcXdB0BecrCv2L0r70MMFtGq82yPHwR3CGswxYG/cFaU3rrO4wfB8PP/weaL4HI+jpG83mzQTuLUxB9R14tT8IYJdK/XpC9//2S8K8KHqVj0ESnA+bUYGqY6X3E26L0SM9pa7svsLqooBnhBXsNCjeUndRMo6jx4+7VE0+hjASzwqLDJtGNnUQ4fMWQdebCuCD1XNWMCOuVaNxUhM+4zhH7IfZyPv0hisvibkEXok2mXsfeoI7UvSpznoaMuFDb06f8mAKK2w6lIRDx+F2Gcqyno9hWf5vWbX0x4JiajeI+I/7O6FU68x7ya9w7jfpykm+RvKierpLT/0+5NErUBjlaKu4vcpfux/sh5u+RCfDvt6mtKBeg497nU+xiWEy5rM8Pc99z+Oz7DlPj1MF8j3UgBCcwwsdV3p6jz34Vzb4NQN0uU0xWnpZabXKxZU0dAgauXK2RlmbNGfke9MM7qZ/jC2LKtrTNm6XcnkalivUfIprI24lDRtCxMz0vEURAh4IJlZM7rf4weA+qG0a0cn/xAGWxegACD3pvs54un8q/L9AHwuoH993c8rOp/+yvqRXiCTxEKYPDmtAJAZ43UB2QlyP7rXi+xmH7AtffY69Cf+A8Ul8e/Ac4U/SEfNxVPdx9g09ixNkUj8M3RGN/e1Y5rjgNArt1er3NCr+F9oyeSUJB4dwZSwUCXe63ZRo78IlVqTKX+RRDwgwIaJUi1qQV+rcBKOFKFwMdQQVNErndTVLzvU4zhuqY4asRNcWVzmeKpIKPibRWwWgxNiKBEfN1o3qIEqorR4WKiVUhU4aXy761rTo8Ji1T54pNEsxbDU5QYUiyIsuLLX6yQnbITHUXVV7gwGGliJJzIPom1GuuvB4tG/9Yo0+bIii5lKTbYe/4NtYWLkJiHir+AsHxToANjUzDfXhMhasNwQXx57zs0xUIH5BEi+xbgLZyPRBqSssN9lYID0FcMQSIw8QKjZUZ0dDZVnHb6wOjtgKPTjKdQaQfO1Ruu9aCDodm85ujr8QNIgTJKnLTPyyhvYyrw4uOD30sCfB045TRBQoSJOOOsc84TJUY8uIwpP3/tCy7yd1mlcROkvX0/4bnkKbjiqgDX3rrYUcVrqnQEvk+hgrwzVAfdVDfU94qBiPy9k0iGjBgzcV2MOPFi32komwf/hoZK8C8nUbIUSTqlmmTtHRu27BSy5yBNhkzp73G8PxdvLHG1YVOrNsxYsL4rIt+z+O8NQTzx6fWFr3yD1gjb8rGjdw/ebURJuHQhiORjosWNBzUaqMV6ZgpDyNwxZM26XTNmzZm3EwrHrSIl4oS6UBPvJwswnDhU89QTGoLESTzFKE7LU6xIiWzuXtAMvSQKI6XuuaGMtlvuuln9r0HXdUyWb9ruhCy7+LEb1zRIjFb0m6WapAeP0slL4P+AdTi6pEmqsbXJbM/BtTy3bt20a8fmEN5Rqw//PeH1K/5x23Oq8rId2wcRFUqN1gYA) format("woff2");
+  }
+
+  /* The "Soft 16-bit" palette. Every color in the game comes from here. */
+  :root {
+    --bg: #cdeedd;      /* the screen behind everything: soft mint */
+    --on-bg: #24433a;   /* text that sits right on the mint */
+    --panel: #2c3a44;   /* player cards, buttons and pop-up windows */
+    --panel-hi: #3d4d59; /* a lighter panel: hover color and end-screen boxes */
+    --dark: #4a2c20;    /* dark chocolate: the board tray */
+    --mid: #b0703f;     /* milk chocolate: covered squares */
+    --light: #d9955f;   /* chocolate highlight */
+    --cream: #fbeedc;   /* the inside of an eaten square */
+    --shade: #d9bfa0;   /* the rim of an eaten square */
+    --ink: #2b1b17;     /* outlines and dark text */
+    --text: #fff6ec;    /* light text */
+    --dim: #e0c8b8;     /* quieter light text */
+    --p1: #b6f04a;      /* lime */
+    --p2: #ff4fb3;      /* magenta */
+    --turn: var(--p1);
+    --px: 5px;          /* the size of one sprite pixel */
+    --cell: 40px;       /* one square = 8 sprite pixels */
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: "Press Start 2P", monospace;
+    font-size: 10px; line-height: 1.6;
+    color: var(--text);
+    background: var(--bg);
+    overflow: hidden;
+  }
+  canvas { image-rendering: pixelated; display: block; }
+  #stage { position: fixed; inset: 0; text-transform: uppercase; }
+
+  .screen {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center;
+    opacity: 0; visibility: hidden;
+    transition: opacity .2s, visibility .2s;
+  }
+  .screen.on { opacity: 1; visibility: visible; }
+  /* A screen that has finished fading out leaves the page completely.
+     Otherwise iPhone Safari keeps coloring its bars to match it. */
+  .screen[hidden] { display: none; }
+
+  button { font: inherit; color: inherit; text-transform: inherit; cursor: pointer; touch-action: manipulation; }
+  button:focus-visible { outline: 3px solid var(--cream); outline-offset: 2px; }
+
+
+  /* Pixel buttons: thick outline and a hard shadow, no rounded corners */
+  .pxbtn {
+    border: 3px solid var(--ink);
+    background: var(--cream); color: var(--ink);
+    box-shadow: 4px 4px 0 var(--ink);
+    transition: transform .08s, box-shadow .08s;
+  }
+  .pxbtn:hover { background: #fff; }
+  .pxbtn:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--ink); }
+  .bigbtn { padding: 16px 32px; font-size: 16px; font-weight: 700; }
+  .ghostbtn { padding: 10px 22px; font-size: 10px; background: var(--panel); color: var(--text); }
+  .ghostbtn:hover { background: var(--panel-hi); }
+
+  /* ---------- Game screen ---------- */
+  #game { justify-content: flex-start; }
+  .col {
+    width: 100%; max-width: 520px; height: 100%;
+    display: flex; flex-direction: column; gap: 8px;
+    padding: max(10px, env(safe-area-inset-top)) 12px max(10px, env(safe-area-inset-bottom));
+  }
+
+  /* Player cards drawn like little windows: a colored title bar, then a body */
+  .cards { display: grid; grid-template-columns: auto 1fr 1fr auto; gap: 8px; align-items: center; justify-content: center; }
+  /* The two people beside the cards. Whoever is waiting fades and turns gray. */
+  .who { opacity: .45; filter: grayscale(1); transition: opacity .2s, filter .2s; }
+  .who.active { opacity: 1; filter: none; }
+  /* Each sprite has empty space on the side facing its score box. Slide the
+     drawing toward the box so the visible gap is 11px. The boxes don't move. */
+  #who0 { transform: translateX(12px); }
+  #who1 { transform: translateX(-12px); }
+  .card {
+    --pc: var(--p1);
+    position: relative;
+    border: 3px solid var(--ink); background: var(--panel);
+    opacity: .6;
+    transition: opacity .2s;
+  }
+  .card.p2 { --pc: var(--p2); }
+  .card.active { opacity: 1; }
+  .card .bar {
+    display: flex; align-items: center; justify-content: space-between; gap: 6px;
+    background: var(--pc); color: var(--ink);
+    padding: 5px 7px; font-size: 12px; white-space: nowrap;
+  }
+  .card .body { padding: 5px 8px 7px; }
+  .card .pts { font-size: 20px; font-weight: 700; line-height: 1.3; color: var(--pc); font-variant-numeric: tabular-nums; }
+  .pop {
+    position: absolute; right: 10px; top: 30px; font-size: 16px; font-weight: 700;
+    pointer-events: none; animation: pop 1s ease-out forwards;
+    text-shadow: 2px 2px 0 var(--ink);
+  }
+  .pop.up { color: #a8f0a0; }
+  .pop.down { color: #ff9a8a; }
+  @keyframes pop {
+    0% { transform: translateY(8px); opacity: 0; }
+    20% { transform: translateY(-4px); opacity: 1; }
+    100% { transform: translateY(-34px); opacity: 0; }
+  }
+
+  .boardwrap { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; position: relative; }
+  .board {
+    position: relative;
+    display: grid; gap: var(--px); padding: var(--px);
+    background: var(--dark);
+    border: 3px solid var(--ink);
+  }
+  .cell {
+    width: var(--cell); height: var(--cell);
+    border: 0; padding: 0; background: transparent; position: relative;
+  }
+  .cell.covered:hover canvas { filter: brightness(1.12); }
+  .cell.covered:active canvas { filter: brightness(.9); }
+  .cell:disabled { cursor: default; }
+  .cell.open canvas { animation: eat .25s ease-out; }
+  @keyframes eat { 0% { filter: brightness(1.6); } 100% { filter: none; } }
+  .cell.flagged canvas, .cell.bitten canvas { animation: flagpop .4s; }
+  @keyframes flagpop { 0% { transform: scale(.7); } 55% { transform: scale(1.2); } 100% { transform: scale(1); } }
+  .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-self: center; }
+  .mode {
+    border: 3px solid var(--ink);
+    padding: 16px 6px; font-size: 16px; font-weight: 700;
+    background: var(--panel); color: var(--dim);
+    transition: background .15s, color .15s;
+  }
+  /* Eat and Flag light up once a square is picked */
+  .modes.ready .mode { background: var(--turn); color: var(--ink); }
+  .modes.ready .mode:active { transform: translate(2px, 2px); }
+  /* The picked square: a thick outline in the color of whoever's turn it is */
+  .cell.selected { outline: 4px solid var(--turn); outline-offset: 1px; z-index: 2; }
+  .cell.selected canvas { filter: brightness(1.2); }
+
+  /* Almonds left: one plain centered line between the scores and the board */
+  .left { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 16px; color: var(--on-bg); }
+  #left { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  /* ---------- End screen: one big window ---------- */
+  /* No dark backdrop: the board stays bright behind the window, and iPhone
+     Safari has no dark color to copy into its bars. The clear layer still
+     blocks taps on the board. */
+  .overlay { background: transparent; justify-content: center; z-index: 10; }
+  .panel {
+    width: min(92vw, 420px);
+    border: 3px solid var(--ink); background: var(--panel);
+    box-shadow: 6px 6px 0 var(--ink);
+  }
+  .panel .inner {
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+    padding: 20px 18px 22px; text-align: center;
+  }
+  .panel h2 { margin: 0; font-size: 16px; font-weight: 700; line-height: 1.4; }
+  .panel p { margin: 0; font-size: 12px; line-height: 1.7; }
+  #end { z-index: 20; }
+  .final { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+  .final .fc { border: 3px solid var(--ink); background: var(--panel-hi); }
+  .final .fc .fbar { background: var(--pc); color: var(--ink); padding: 4px 6px; font-size: 12px; }
+  .final .fc .fbody { padding: 6px 6px 8px; }
+  .final .fc .big { font-size: 20px; font-weight: 700; color: var(--pc); line-height: 1.4; }
+  .final .fc span { font-size: 8px; color: var(--dim); display: block; line-height: 1.8; }
+
+  #fx { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 30; }
+
+  @media (max-height: 640px) {
+    .card .pts { font-size: 16px; }
+    .mode { padding: 11px 4px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cell.open canvas, .cell.flagged canvas, .cell.bitten canvas, .pop { animation: none !important; }
+    .screen { transition: none; }
+  }
+</style>
+</head>
+
+<!-- ============================== HTML ============================== -->
+<body>
+<div id="stage">
+
+  <!-- Game screen -->
+  <section class="screen" id="game" aria-label="Game">
+    <div class="col">
+      <div class="cards" id="cards"></div>
+      <div class="left" id="leftBox"></div>
+      <div class="boardwrap" id="boardwrap">
+        <div class="board" id="board"></div>
+      </div>
+      <div class="modes" id="modes">
+        <button class="mode" id="eatBtn">Eat</button>
+        <button class="mode" id="flagBtn">Almond</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- End screen -->
+  <section class="screen overlay" id="end" aria-label="Game over" hidden>
+    <div class="panel">
+      <div class="inner">
+        <h2 id="endTitle"></h2>
+        <p id="endWhy"></p>
+        <div class="final" id="final"></div>
+        <button class="pxbtn bigbtn" id="againBtn">Play Again</button>
+      </div>
+    </div>
+  </section>
+</div>
+<canvas id="fx"></canvas>
+
+<!-- ============================== JAVASCRIPT ============================== -->
+<script>
+"use strict";
+
+/* ---------- 1. GAME_SPEC: every rule, number and word lives here ---------- */
+const GAME_SPEC = {
+  folder: "almond-allergy",
+  cols: 5,
+  rows: 5,
+  almonds: 5,
+  points: { flagHit: 1, flagMiss: -1, bite: -1 },
+  players: [
+    { name: "Player 1", color: "#b6f04a" },
+    { name: "Player 2", color: "#ff4fb3" }
+  ],
+  // Number colors for 1 to 8. Each reads at 4.5 to 1 or better on the cream inside
+  // of an eaten square, the usual bar for easy reading.
+  numberColors: ["", "#2f5fc4", "#1f7a3a", "#c8321f", "#7a4fb8", "#8f2a2a", "#1c6f7a", "#2b1b17", "#6b5a55"],
+  endDelayMs: 1200,
+  cascadeStepMs: 70,
+  // End-of-game messages
+  text: {
+    winner: "{name} wins!",
+    winMistakes: "Tied at {a} points, but {name} made fewer mistakes ({m1} to {m2}).",
+    draw: "Same points and same mistakes."
+  }
+};
+
+/* ---------- 1b. SPRITES: every picture is a grid of 8 x 8 letters ----------
+   Each letter is a color from PALETTE. A dot is empty (nothing is drawn).
+   To change a picture, change the letters. */
+const PALETTE = {
+  d: "#4a2c20",   // dark chocolate
+  m: "#b0703f",   // milk chocolate
+  l: "#d9955f",   // chocolate highlight
+  c: "#fbeedc",   // cream inside
+  s: "#d9bfa0",   // cream rim
+  k: "#2b1b17",   // ink outline
+  n: "#c7865a",   // almond body
+  x: "#8a5433",   // almond shadow (the darker skin)
+  h: "#f0c89a"    // almond highlight
+};
+const SPRITES = {
+  // A covered square: milk chocolate with a dark outline
+  covered: [
+    "kkkkkkkk",
+    "kmmmmmmk",
+    "kmmmmmmk",
+    "kmmmmmmk",
+    "kmmmmmmk",
+    "kmmmmmmk",
+    "kmmmmmmk",
+    "kkkkkkkk"
+  ],
+  // An eaten square: cream inside with a rim
+  open: [
+    "ssssssss",
+    "sccccccs",
+    "sccccccs",
+    "sccccccs",
+    "sccccccs",
+    "sccccccs",
+    "sccccccs",
+    "ssssssss"
+  ],
+  // A found or bitten almond is drawn with pixels half the size (16 x 16),
+  // so the whole almond fits inside the player's colored outline.
+  // P is the outline in the player's color, c is the cream inside.
+  almondFine: [
+    "PPPPPPPPPPPPPPPP",
+    "PPPPPPPPPPPPPPPP",
+    "PPccccccccccccPP",
+    "PPccccckkcccccPP",
+    "PPccccknnkccccPP",
+    "PPccckhnnnkcccPP",
+    "PPccckhnnxkcccPP",
+    "PPcckhnnnxxkccPP",
+    "PPcckhnnnxxkccPP",
+    "PPccknnnnxxkccPP",
+    "PPcccknnxxkcccPP",
+    "PPcccckxxkccccPP",
+    "PPccccckkcccccPP",
+    "PPccccccccccccPP",
+    "PPPPPPPPPPPPPPPP",
+    "PPPPPPPPPPPPPPPP"
+  ],
+  // The crack through a bitten almond, at the same half-size pixels
+  crackFine: [
+    "................",
+    "................",
+    "................",
+    "................",
+    "........c.......",
+    "........c.......",
+    ".......c........",
+    ".......c........",
+    "........c.......",
+    "........c.......",
+    ".......c........",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................"
+  ]
+};
+// The two people who stand beside the player cards, copied from the arcade's
+// shared sprites folder (player-front.js "ready" and woman-front.js "standing").
+// Each is 20 x 20 letters with its own colors.
+const PEOPLE = [
+  { // Player 1: the player
+    palette: { h: "#1a1a1a", s: "#a86b3c", e: "#1a1a1a", t: "#ffffff", p: "#6e1b2e", k: "#222222", r: "#d9d9d9", n: "rgba(207,233,255,0.5)" },
+    grid: [
+      "........hhhh........",
+      ".......hhhhhh.......",
+      ".......hssssh.......",
+      ".......sesses.......",
+      "........ssss........",
+      ".........ss.........",
+      "......tttttttt......",
+      ".....tttttttttt.....",
+      ".....stttttttts.....",
+      ".....s.tttttt.s.....",
+      ".....s.tttttt.s.....",
+      ".....r.tttttt.......",
+      ".....r.pppppp.......",
+      "....rr.pppppp.......",
+      "...rnnrpp..pp.......",
+      "...rnnrss..ss.......",
+      "...rnnrss..ss.......",
+      "....rr.ss..ss.......",
+      "......kkk..kkk......",
+      "...................."
+    ]
+  },
+  { // Player 2: the woman
+    palette: { h: "#1a1a1a", s: "#f0c8a0", e: "#67443b", d: "#d6263a", k: "#222222" },
+    grid: [
+      "........hhhh........",
+      ".......hhhhhh.......",
+      "......hhsssshh......",
+      "......hsessesh......",
+      "......hhsssshh......",
+      "......hhhsshhh......",
+      "......sdssssds......",
+      "......sdddddds......",
+      "......sdddddds......",
+      "......sdddddds......",
+      ".......dddddd.......",
+      "......dddddddd......",
+      "......dddddddd......",
+      ".....dddddddddd.....",
+      ".....dddddddddd.....",
+      ".......ss..ss.......",
+      ".......ss..ss.......",
+      ".......ss..ss.......",
+      "......kkk..kkk......",
+      "...................."
+    ]
+  }
+];
+
+// Digits 1 to 8, drawn with half-size pixels like the found almonds. Each is
+// 12 x 12: the cream inside of a square. # is a filled pixel.
+const DIGITS = {
+  1: [ // 1
+    "............",
+    "............",
+    ".....##.....",
+    "....###.....",
+    "...####.....",
+    ".....##.....",
+    ".....##.....",
+    ".....##.....",
+    ".....##.....",
+    "...######...",
+    "............",
+    "............"
+  ],
+  2: [ // 2
+    "............",
+    "............",
+    "....####....",
+    "...##..##...",
+    ".......##...",
+    "......##....",
+    ".....##.....",
+    "....##......",
+    "...##.......",
+    "...######...",
+    "............",
+    "............"
+  ],
+  3: [ // 3 (round top)
+    "............",
+    "............",
+    "....####....",
+    "...##..##...",
+    ".......##...",
+    ".....###....",
+    ".......##...",
+    ".......##...",
+    "...##..##...",
+    "....####....",
+    "............",
+    "............"
+  ],
+  4: [ // 4 (hand-drawn)
+    "............",
+    "............",
+    "......##....",
+    ".....###....",
+    "....####....",
+    "...##.##....",
+    "..##..##....",
+    "..#######...",
+    "......##....",
+    "......##....",
+    "............",
+    "............"
+  ],
+  5: [ // 5 (flat bottom)
+    "............",
+    "............",
+    "...######...",
+    "...##.......",
+    "...##.......",
+    "...#####....",
+    ".......##...",
+    ".......##...",
+    ".......##...",
+    "...#####....",
+    "............",
+    "............"
+  ],
+  6: [ // 6
+    "............",
+    "............",
+    ".....###....",
+    "....##......",
+    "...##.......",
+    "...#####....",
+    "...##..##...",
+    "...##..##...",
+    "...##..##...",
+    "....####....",
+    "............",
+    "............"
+  ],
+  7: [ // 7
+    "............",
+    "............",
+    "...######...",
+    ".......##...",
+    "......##....",
+    "......##....",
+    ".....##.....",
+    ".....##.....",
+    ".....##.....",
+    ".....##.....",
+    "............",
+    "............"
+  ],
+  8: [ // 8
+    "............",
+    "............",
+    "....####....",
+    "...##..##...",
+    "...##..##...",
+    "....####....",
+    "...##..##...",
+    "...##..##...",
+    "...##..##...",
+    "....####....",
+    "............",
+    "............"
+  ]
+};
+
+/* ---------- 2. State ---------- */
+let S = null;          // the current game (null before the first game)
+let gameCounter = 0;   // lets old timers know their game is over
+let selected = null;   // the square the player tapped, waiting for Eat or Flag
+let px = 5;            // size of one sprite pixel on screen, set by fitBoard
+
+/* ---------- 3. Rules (never draws) ---------- */
+
+// Safe wrapper for saving who goes first next time
+function loadNextFirst() {
+  try { return localStorage.getItem(GAME_SPEC.folder + "-nextFirst") === "1" ? 1 : 0; }
+  catch (e) { return 0; }
+}
+function saveNextFirst(n) {
+  try { localStorage.setItem(GAME_SPEC.folder + "-nextFirst", String(n)); } catch (e) {}
+}
+
+// Indexes of the (up to 8) squares touching square i
+function neighbors(i) {
+  const { cols, rows } = GAME_SPEC;
+  const r = Math.floor(i / cols), c = i % cols, out = [];
+  for (let dr = -1; dr <= 1; dr++) {
+    for (let dc = -1; dc <= 1; dc++) {
+      if (!dr && !dc) continue;
+      const rr = r + dr, cc = c + dc;
+      if (rr >= 0 && rr < rows && cc >= 0 && cc < cols) out.push(rr * cols + cc);
+    }
+  }
+  return out;
+}
+
+// Make a fresh covered bar with almonds in random squares
+function newGame(first) {
+  const total = GAME_SPEC.cols * GAME_SPEC.rows;
+  const cells = [];
+  for (let i = 0; i < total; i++) cells.push({ almond: false, count: 0, status: "covered", by: null });
+  let placed = 0;
+  while (placed < GAME_SPEC.almonds) {
+    const i = Math.floor(Math.random() * total);
+    if (!cells[i].almond) { cells[i].almond = true; placed++; }
+  }
+  for (let i = 0; i < total; i++) {
+    cells[i].count = neighbors(i).filter(n => cells[n].almond).length;
+  }
+  return {
+    id: ++gameCounter,
+    cells,
+    turn: first,
+    stats: [{ points: 0, wrong: 0, bites: 0 }, { points: 0, wrong: 0, bites: 0 }],
+    over: false
+  };
+}
+
+// How many almonds have been found (flagged or bitten)
+function almondsFound() {
+  return S.cells.filter(c => c.almond && c.status !== "covered").length;
+}
+
+// Eat square i. Returns what happened.
+function doTap(i) {
+  const cell = S.cells[i], p = S.turn;
+  if (cell.almond) {
+    cell.status = "bitten"; cell.by = p;
+    S.stats[p].points += GAME_SPEC.points.bite;
+    S.stats[p].bites++;
+    S.turn = 1 - p;
+    return finish({ kind: "bite", player: p, index: i, delta: GAME_SPEC.points.bite, opened: [{ i, depth: 0 }] });
+  }
+  // Safe square: open it, and if it is a 0, spread outward
+  const opened = [{ i, depth: 0 }];
+  cell.status = "open";
+  if (cell.count === 0) {
+    const queue = [{ i, depth: 0 }];
+    while (queue.length) {
+      const cur = queue.shift();
+      for (const n of neighbors(cur.i)) {
+        const nc = S.cells[n];
+        if (nc.status !== "covered" || nc.almond) continue;
+        nc.status = "open";
+        const entry = { i: n, depth: cur.depth + 1 };
+        opened.push(entry);
+        if (nc.count === 0) queue.push(entry);
+      }
+    }
+  }
+  S.turn = 1 - p;
+  return finish({ kind: opened.length > 1 ? "spread" : "safe", player: p, index: i, delta: 0, opened });
+}
+
+// Flag square i. Returns what happened.
+function doFlag(i) {
+  const cell = S.cells[i], p = S.turn;
+  if (cell.almond) {
+    cell.status = "flagged"; cell.by = p;
+    S.stats[p].points += GAME_SPEC.points.flagHit;
+    // Same player goes again: the turn does not change
+    return finish({ kind: "flagHit", player: p, index: i, delta: GAME_SPEC.points.flagHit, opened: [{ i, depth: 0 }] });
+  }
+  cell.status = "open"; cell.by = p; cell.wrongFlag = true;
+  S.stats[p].points += GAME_SPEC.points.flagMiss;
+  S.stats[p].wrong++;
+  S.turn = 1 - p;
+  return finish({ kind: "flagMiss", player: p, index: i, delta: GAME_SPEC.points.flagMiss, opened: [{ i, depth: 0 }] });
+}
+
+// Check whether the game ended after a move
+function finish(result) {
+  if (almondsFound() === GAME_SPEC.almonds) S.over = true;
+  result.over = S.over;
+  return result;
+}
+
+// Who won, and why
+function decideWinner() {
+  const [a, b] = S.stats;
+  const m = [a.wrong + a.bites, b.wrong + b.bites];
+  if (a.points !== b.points) {
+    const w = a.points > b.points ? 0 : 1;
+    return { winner: w, reason: "points", hi: S.stats[w].points, lo: S.stats[1 - w].points };
+  }
+  if (m[0] !== m[1]) {
+    const w = m[0] < m[1] ? 0 : 1;
+    return { winner: w, reason: "mistakes", pts: a.points, m1: m[w], m2: m[1 - w] };
+  }
+  return { winner: null, reason: "draw" };
+}
+
+/* ---------- 4. Drawing (never changes the rules) ---------- */
+const $ = id => document.getElementById(id);
+const cellEls = [];
+
+function pc(p) { return GAME_SPEC.players[p].color; }
+function fill(tpl, vals) { return tpl.replace(/\{(\w+)\}/g, (m, k) => (k in vals ? vals[k] : m)); }
+
+// Make a canvas that shows `size` sprite pixels, each `scale` screen pixels wide.
+// Canvases are sized for the screen's real pixel density so every pixel stays crisp.
+function makeCanvas(canvas, cols, rows, scale) {
+  const d = window.devicePixelRatio || 1;
+  canvas.width = Math.round(cols * scale * d);
+  canvas.height = Math.round(rows * scale * d);
+  canvas.style.width = cols * scale + "px";
+  canvas.style.height = rows * scale + "px";
+  const ctx = canvas.getContext("2d");
+  ctx.d = d;
+  ctx.imageSmoothingEnabled = false;
+  return ctx;
+}
+
+// Fill one block, snapped to the screen's real pixels. Blocks that touch share
+// the exact same edge, so no faint seams show between sprite pixels.
+function block(ctx, x, y, w, h) {
+  const d = ctx.d || 1;
+  const x1 = Math.round(x * d), y1 = Math.round(y * d);
+  ctx.fillRect(x1, y1, Math.round((x + w) * d) - x1, Math.round((y + h) * d) - y1);
+}
+
+// Paint one letter grid at (x0, y0). `extra` maps extra letters to colors.
+function paintGrid(ctx, grid, scale, x0, y0, extra) {
+  for (let y = 0; y < grid.length; y++) {
+    for (let x = 0; x < grid[y].length; x++) {
+      const ch = grid[y][x];
+      if (ch === ".") continue;
+      const color = (extra && extra[ch]) || PALETTE[ch];
+      if (!color) continue;
+      ctx.fillStyle = color;
+      block(ctx, x0 + x * scale, y0 + y * scale, scale, scale);
+    }
+  }
+}
+
+// Paint a digit (1 to 8) in the middle of a square
+function paintDigit(ctx, n, color, scale, x0, y0) {
+  const g = DIGITS[n];
+  if (!g) return;
+  // Half-size pixels, starting just inside the square's rim
+  const f = scale / 2;
+  ctx.fillStyle = color;
+  for (let y = 0; y < 12; y++) {
+    for (let x = 0; x < 12; x++) {
+      if (g[y][x] === "#") block(ctx, x0 + (2 + x) * f, y0 + (2 + y) * f, f, f);
+    }
+  }
+}
+
+// The open square with its outer rim recolored (used for flagged and bitten squares)
+function ringedOpen(color) {
+  return SPRITES.open.map((row, y) => row.split("").map((ch, x) =>
+    (y === 0 || y === 7 || x === 0 || x === 7) ? "P" : ch).join(""));
+}
+
+// Draw one square's picture onto its canvas
+function paintSquare(ctx, scale, x0, y0, c) {
+  if (c.status === "covered") {
+    paintGrid(ctx, SPRITES.covered, scale, x0, y0);
+    return;
+  }
+  const ring = c.by !== null ? pc(c.by) : null;
+  paintGrid(ctx, ring ? ringedOpen() : SPRITES.open, scale, x0, y0, { P: ring });
+  if (c.status === "open") {
+    if (c.count > 0) paintDigit(ctx, c.count, GAME_SPEC.numberColors[c.count], scale, x0, y0);
+  } else {
+    // Found or bitten: redraw the whole square at half-size pixels so the
+    // almond sits fully inside the colored outline
+    paintGrid(ctx, SPRITES.almondFine, scale / 2, x0, y0, { P: ring });
+    if (c.status === "bitten") paintGrid(ctx, SPRITES.crackFine, scale / 2, x0, y0);
+  }
+}
+
+// Build the 6 x 8 grid of squares once per game
+function buildBoard() {
+  const board = $("board");
+  board.innerHTML = "";
+  board.style.gridTemplateColumns = `repeat(${GAME_SPEC.cols}, var(--cell))`;
+  cellEls.length = 0;
+  for (let i = 0; i < GAME_SPEC.cols * GAME_SPEC.rows; i++) {
+    const b = document.createElement("button");
+    b.className = "cell covered";
+    b.dataset.i = i;
+    b.appendChild(document.createElement("canvas"));
+    cellEls.push(b);
+    board.appendChild(b);
+  }
+  fitBoard();
+}
+
+// Draw one square to match its state
+function paintCell(i) {
+  const c = S.cells[i], el = cellEls[i];
+  el.className = "cell " + c.status + (c.wrongFlag ? " wrongflag" : "") + (i === selected ? " selected" : "");
+  el.style.setProperty("--pc", c.by !== null ? pc(c.by) : "transparent");
+  const ctx = makeCanvas(el.querySelector("canvas"), 8, 8, px);
+  paintSquare(ctx, px, 0, 0, c);
+  const r = Math.floor(i / GAME_SPEC.cols) + 1, col = (i % GAME_SPEC.cols) + 1;
+  let label = `Row ${r}, column ${col}, `;
+  if (c.status === "covered") label += "covered";
+  else if (c.status === "open") label += `${c.count} almonds touching` + (c.wrongFlag ? ", wrong almond guess by " + GAME_SPEC.players[c.by].name : "");
+  else if (c.status === "flagged") label += "almond flagged by " + GAME_SPEC.players[c.by].name;
+  else label += "almond bitten by " + GAME_SPEC.players[c.by].name;
+  el.setAttribute("aria-label", label);
+  el.disabled = c.status !== "covered";
+}
+
+// Make the bar as big as the window allows. A square is 8 sprite pixels and the
+// gap between squares is 1, so the whole bar is a whole number of sprite pixels.
+function fitBoard() {
+  const wrap = $("boardwrap");
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+  if (!w || !h) return;
+  const { cols, rows } = GAME_SPEC;
+  const border = 6;
+  const byW = (w - border) / (cols * 8 + cols + 1);
+  const byH = (h - border) / (rows * 8 + rows + 1);
+  px = Math.max(3, Math.min(10, Math.floor(Math.min(byW, byH))));
+  const board = $("board");
+  board.style.setProperty("--px", px + "px");
+  board.style.setProperty("--cell", px * 8 + "px");
+  // The Eat and Almond buttons line up with the board's left and right edges
+  $("modes").style.width = board.offsetWidth + "px";
+  if (S) for (let i = 0; i < cellEls.length; i++) paintCell(i);
+}
+
+function renderCards() {
+  const wrap = $("cards");
+  if (!wrap.children.length) {
+    const who = p => `<canvas class="who" id="who${p}" aria-hidden="true"></canvas>`;
+    wrap.innerHTML = who(0) + [0, 1].map(p => `
+      <div class="card p${p + 1}" id="card${p}">
+        <div class="bar"><span>${GAME_SPEC.players[p].name}</span></div>
+        <div class="body">
+          <div class="pts"><span id="pts${p}">0</span></div>
+        </div>
+      </div>`).join("") + who(1);
+    // Player 1 is the player sprite, Player 2 is the woman
+    PEOPLE.forEach((person, p) => {
+      const ctx = makeCanvas($("who" + p), 20, 20, 3);
+      paintGrid(ctx, person.grid, 3, 0, 0, person.palette);
+    });
+  }
+  for (let p = 0; p < 2; p++) {
+    $("pts" + p).textContent = S.stats[p].points;
+    $("card" + p).classList.toggle("active", !S.over && S.turn === p);
+    $("who" + p).classList.toggle("active", !S.over && S.turn === p);
+  }
+  $("game").style.setProperty("--turn", pc(S.turn));
+  const n = GAME_SPEC.almonds - almondsFound();
+  $("left").textContent = n;
+  $("leftWord").textContent = n === 1 ? "almond left" : "almonds left";
+}
+
+function renderLeftBox() {
+  $("leftBox").innerHTML = `<canvas id="leftIcon" aria-hidden="true"></canvas><span><span id="left">7</span> <span id="leftWord">almonds left</span></span>`;
+  // The same detailed almond as on the board: the middle of almondFine, without
+  // the colored ring and the cream around it
+  const icon = SPRITES.almondFine.slice(3, 13).map(row => row.slice(4, 12).replace(/c/g, "."));
+  const ctx = makeCanvas($("leftIcon"), 8, 10, 2.5);
+  paintGrid(ctx, icon, 2.5, 0, 0);
+}
+
+// Floating +1 / −1 on a player's card
+function scorePop(p, delta) {
+  if (!delta) return;
+  const el = document.createElement("span");
+  el.className = "pop " + (delta > 0 ? "up" : "down");
+  el.textContent = (delta > 0 ? "+" : "-") + Math.abs(delta);   // plain "-": the pixel font has no "−"
+  $("card" + p).appendChild(el);
+  setTimeout(() => el.remove(), 1000);
+}
+
+const reduceMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// Little pixel bursts: chocolate crumbs (bite) and sparks in the player's color (good flag)
+const fx = { canvas: $("fx"), ctx: null, parts: [], running: false };
+function sizeFx() {
+  const c = fx.canvas, d = window.devicePixelRatio || 1;
+  c.width = innerWidth * d; c.height = innerHeight * d;
+  fx.ctx = c.getContext("2d"); fx.ctx.setTransform(d, 0, 0, d, 0, 0);
+}
+function burst(i, kind, color) {
+  if (reduceMotion()) return;
+  const r = cellEls[i].getBoundingClientRect();
+  const x = r.left + r.width / 2, y = r.top + r.height / 2;
+  const n = kind === "crumb" ? 18 : 14;
+  for (let k = 0; k < n; k++) {
+    const a = Math.random() * Math.PI * 2, s = 1.5 + Math.random() * 4;
+    fx.parts.push({
+      x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 2,
+      life: 1, decay: .018 + Math.random() * .016,
+      size: px * (kind === "crumb" ? 1 : .8),
+      color: kind === "crumb" ? [PALETTE.m, PALETTE.l, PALETTE.c, PALETTE.x][k % 4] : (k % 3 ? color : PALETTE.c),
+      kind
+    });
+  }
+  if (!fx.running) { fx.running = true; requestAnimationFrame(stepFx); }
+}
+function stepFx() {
+  const ctx = fx.ctx;
+  ctx.clearRect(0, 0, innerWidth, innerHeight);
+  fx.parts = fx.parts.filter(p => p.life > 0);
+  for (const p of fx.parts) {
+    p.x += p.vx; p.y += p.vy;
+    p.vy += p.kind === "crumb" ? .22 : .05; p.vx *= .985;
+    p.life -= p.decay;
+    ctx.globalAlpha = p.life > .3 ? 1 : 0;   // pixels blink out instead of fading
+    ctx.fillStyle = p.color;
+    // Snap to the pixel grid so the crumbs look like sprite pixels
+    ctx.fillRect(Math.round(p.x / p.size) * p.size, Math.round(p.y / p.size) * p.size, p.size, p.size);
+  }
+  ctx.globalAlpha = 1;
+  if (fx.parts.length) requestAnimationFrame(stepFx); else fx.running = false;
+}
+
+// Show the result of a move: squares open in a ripple, effects play
+function drawResult(res) {
+  const id = S.id;
+  const step = reduceMotion() ? 0 : GAME_SPEC.cascadeStepMs;
+  res.opened.forEach(o => {
+    setTimeout(() => { if (S && S.id === id) paintCell(o.i); }, Math.min(o.depth * step, 700));
+  });
+  if (res.kind === "bite") burst(res.index, "crumb");
+  else if (res.kind === "flagHit") burst(res.index, "spark", pc(res.player));
+  scorePop(res.player, res.delta);
+  renderCards();
+}
+
+/* ---------- 5. Input ---------- */
+// Step 1: tap a square to pick it. Tap it again to let go of it.
+function select(i) {
+  const old = selected;
+  selected = i;
+  if (old !== null) paintCell(old);
+  if (i !== null) paintCell(i);
+  $("modes").classList.toggle("ready", i !== null);
+}
+
+function onBoardClick(e) {
+  const el = e.target.closest(".cell");
+  if (!el || !S || S.over) return;
+  const i = +el.dataset.i;
+  if (S.cells[i].status !== "covered") return;
+  select(selected === i ? null : i);
+}
+
+// Step 2: Eat or Flag the picked square
+function act(kind) {
+  if (!S || S.over || selected === null) return;
+  const i = selected;
+  select(null);
+  const res = kind === "eat" ? doTap(i) : doFlag(i);
+  drawResult(res);
+  if (res.over) endSoon();
+}
+
+/* ---------- 6. Screens ---------- */
+// Fade a screen in or out. Once it has faded out, it leaves the page
+// completely (the "hidden" attribute), so iPhone Safari stops matching
+// its bar colors to it.
+const FADE_MS = 200;
+const hideTimers = {};
+function show(id, on) {
+  const el = $(id);
+  clearTimeout(hideTimers[id]);
+  if (on) {
+    el.hidden = false;
+    void el.offsetWidth;   // let the browser see it before the fade starts
+    el.classList.add("on");
+  } else {
+    el.classList.remove("on");
+    hideTimers[id] = setTimeout(() => { el.hidden = true; }, FADE_MS);
+  }
+}
+
+function startGame() {
+  const first = loadNextFirst();
+  saveNextFirst(1 - first);   // the other player starts next time
+  S = newGame(first);
+  selected = null;
+  $("modes").classList.remove("ready");
+  show("end", false); show("game", true);
+  renderLeftBox();
+  buildBoard();
+  for (let i = 0; i < cellEls.length; i++) paintCell(i);
+  renderCards();
+  requestAnimationFrame(fitBoard);
+}
+
+function endSoon() {
+  const id = S.id;
+  setTimeout(() => { if (S && S.id === id) showEnd(); }, GAME_SPEC.endDelayMs);
+}
+
+function showEnd() {
+  const r = decideWinner(), T = GAME_SPEC.text, P = GAME_SPEC.players;
+  let title, why;
+  if (r.winner === null) {
+    title = "It's a draw!"; why = T.draw;
+  } else {
+    title = fill(T.winner, { name: P[r.winner].name });
+    // A win on points needs no explanation. Only a tie broken by mistakes does.
+    why = r.reason === "points" ? ""
+      : fill(T.winMistakes, { name: P[r.winner].name, a: r.pts, m1: r.m1, m2: r.m2 });
+  }
+  $("endTitle").textContent = title;
+  $("endTitle").style.color = r.winner === null ? "#fbeedc" : pc(r.winner);
+  $("endWhy").textContent = why;
+  $("endWhy").hidden = !why;
+  $("final").innerHTML = [0, 1].map(p => `
+    <div class="fc" style="--pc:${pc(p)}">
+      <div class="fbar">${P[p].name}</div>
+      <div class="fbody">
+        <div class="big">${S.stats[p].points}</div>
+        <span>Wrong guesses: ${S.stats[p].wrong}</span><span>Almonds eaten: ${S.stats[p].bites}</span>
+      </div>
+    </div>`).join("");
+  show("end", true);
+  $("againBtn").focus();
+}
+
+// Wire up the buttons
+$("againBtn").addEventListener("click", startGame);
+$("board").addEventListener("click", onBoardClick);
+$("eatBtn").addEventListener("click", () => act("eat"));
+$("flagBtn").addEventListener("click", () => act("flag"));
+// Keyboard shortcuts for the picked square: E to eat, A (or F) to call it an almond
+document.addEventListener("keydown", e => {
+  if (!S || S.over || !$("game").classList.contains("on")) return;
+  if (e.key === "e" || e.key === "E") act("eat");
+  if ("aAfF".includes(e.key)) act("flag");
+});
+window.addEventListener("resize", () => { sizeFx(); fitBoard(); });
+
+sizeFx();
+startGame();   // no intro screen: the game starts right away
+</script>
+</body>
+</html>

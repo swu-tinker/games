@@ -1,0 +1,6 @@
+# This file sets up how GitHub Pages builds the site.
+# The site is only the HTML games and the home page. Markdown files (README,
+# CLAUDE.md, game notes) stay in the repo but are left off the website. This
+# also stops a stray curly brace in a note from breaking the whole site.
+exclude:
+  - "*.md"

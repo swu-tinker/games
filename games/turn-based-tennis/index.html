@@ -1,0 +1,2021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Turn Based Tennis</title>
+<!-- These two lines tell Safari this is a dark green page, so its toolbars and the edges never show white. -->
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#12301f">
+<!-- This line keeps search engines from listing the game. -->
+<meta name="robots" content="noindex">
+<!-- This line loads the password screen shared by every game. -->
+<script src="../../gate.js"></script>
+
+<!-- ==================== CSS ==================== -->
+<style>
+  /* A few plain colors. The look will be designed later; this keeps it clean. */
+  :root {
+    --bg: #12301f;
+    --panel: #1b3d2a;
+    --panel-2: #24503a;
+    --ink: #f3f6ef;
+    --muted: #b9cbbd;
+    --ball: #e6f53a;
+    --best: #5fd17a;
+    --okay: #f2c14e;
+    --wrong: #ff7a6b;
+    --accent: #7fd3ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%;
+    background-color: var(--bg);
+    background-image: radial-gradient(ellipse at top, #1d4a31 0%, var(--bg) 70%);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    overflow: hidden;
+  }
+  button {
+    font: inherit; color: inherit; cursor: pointer;
+    border: 2px solid transparent; border-radius: 12px;
+    touch-action: manipulation;
+  }
+  button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- Screens fade in and out ---------- */
+  .screen {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.35s ease;
+  }
+  .screen.active { opacity: 1; pointer-events: auto; }
+
+  .back-link {
+    position: absolute; top: 12px; left: 14px;
+    color: var(--muted); text-decoration: none; font-size: 15px;
+    padding: 6px 8px; border-radius: 8px; z-index: 2;
+  }
+  .back-link:hover { color: var(--ink); background: rgba(255,255,255,0.08); }
+
+  /* ---------- Start and end screens ---------- */
+  .card-screen { align-items: center; justify-content: center; padding: 56px 18px 24px; overflow-y: auto; }
+  .card {
+    width: 100%; max-width: 520px;
+    background: var(--panel); border-radius: 20px;
+    padding: 28px 24px; text-align: center;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+  }
+  .card h1 { margin: 0 0 6px; font-size: 40px; letter-spacing: 0.5px; }
+  .card h2 { margin: 0 0 10px; font-size: 30px; }
+  .card p { color: var(--muted); line-height: 1.45; margin: 8px 0; }
+  .big-btn {
+    margin-top: 18px; width: 100%; max-width: 320px;
+    padding: 16px 20px; font-size: 22px; font-weight: 700;
+    background: var(--ball); color: #1b2a0c; border-radius: 14px;
+  }
+  .big-btn:hover { filter: brightness(1.07); }
+  .big-btn:active { transform: scale(0.98); }
+
+  .result-score { font-size: 20px; color: var(--ink); margin: 6px 0 18px; }
+  /* Report card: one bar per question */
+  .report { display: flex; flex-direction: column; gap: 14px; text-align: left; }
+  .report-row { display: flex; align-items: center; gap: 12px; font-size: 17px; }
+  .report-row .q { width: 62px; font-weight: 700; }
+  .report-row .bar { flex: 1; height: 12px; border-radius: 6px; background: var(--panel-2); overflow: hidden; }
+  .report-row .bar i { display: block; height: 100%; background: var(--best); border-radius: 6px; }
+  .report-row .n { width: 44px; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  /* ---------- Play screen: fixed zones ----------
+     Top bar, court, and panel. Only the panel changes its content. Its height
+     is fixed, so the court never changes size. */
+  #play { padding: 8px 10px 10px; gap: 8px; }
+  .topbar { flex: none; display: flex; align-items: center; gap: 8px; }
+  /* The score box: one line, "Them 15 | You 30". */
+  .top-gap { flex: 1; }
+  .scorebox {
+    flex: none; display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 14px;
+    background: var(--panel); border-radius: 12px; font-size: 17px; white-space: nowrap;
+  }
+  .scorebox .who { color: var(--muted); font-weight: 600; }
+  .scorebox b { font-size: 20px; font-weight: 800; display: inline-block; min-width: 26px; }
+  .scorebox .bar { width: 1px; height: 22px; background: rgba(255,255,255,0.25); }
+  .scorebox b.bump { animation: bump 0.4s ease; }
+  @keyframes bump { 40% { transform: scale(1.35); color: var(--ball); } }
+  .timer-num { flex: none; font-size: 20px; font-weight: 800; min-width: 44px; text-align: right; }
+  .timer-num.low { color: var(--wrong); }
+  .icon-btn { width: 44px; height: 44px; background: var(--panel); font-size: 18px; flex: none; }
+  /* Between balls the timer dims, so it's clear it isn't counting. */
+  .timer-num.idle { opacity: 0.35; }
+
+  /* Zone 1: the court. It takes whatever space is left. */
+  .court-wrap { flex: 1; min-height: 0; position: relative; }
+  #court { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+  /* Zone 2: the panel. Same size for questions, the summary, and the why page. */
+  .panel {
+    flex: none; height: 252px; background: var(--panel); border-radius: 16px; padding: 12px;
+    display: flex; flex-direction: column; gap: 8px; overflow: hidden;
+  }
+  .panel-head { display: flex; align-items: center; gap: 8px; min-height: 22px; }
+  .panel-title { font-size: 17px; font-weight: 800; }
+  .panel-sub { flex: 1; text-align: right; font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dots { display: flex; gap: 5px; }
+  .dots i { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--muted); }
+  .dots i.on { background: var(--ball); border-color: var(--ball); }
+  .opts { flex: 1; min-height: 0; display: grid; gap: 8px; }
+  .opts.n5 { grid-template-columns: repeat(6, 1fr); grid-template-rows: 1fr 1fr; }
+  .opts.n5 .opt:nth-child(-n+3) { grid-column: span 2; }
+  .opts.n5 .opt:nth-child(n+4) { grid-column: span 3; }
+  .opts.n3 { grid-template-columns: 1fr; grid-template-rows: repeat(3, 1fr); }
+  .opts.n6 { grid-template-columns: repeat(3, 1fr); grid-template-rows: 1fr 1fr; }
+  /* Move answers sit like a compass: in = up, back = down, left and right on
+     their sides, Stay in the middle. The four corners stay empty. */
+  .opts.q-move { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); }
+  .opts.q-move .opt[data-opt="Move in"]    { grid-column: 2; grid-row: 1; }
+  .opts.q-move .opt[data-opt="Step left"]  { grid-column: 1; grid-row: 2; }
+  .opts.q-move .opt[data-opt="Stay"]       { grid-column: 2; grid-row: 2; }
+  .opts.q-move .opt[data-opt="Step right"] { grid-column: 3; grid-row: 2; }
+  .opts.q-move .opt[data-opt="Move back"]  { grid-column: 2; grid-row: 3; }
+  /* Stroke answers sit on the side the ball comes to: both backhand choices
+     on the left, Forehand filling the right. */
+  .opts.q-stroke { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+  .opts.q-stroke .opt[data-opt="Backhand"]            { grid-column: 1; grid-row: 1; }
+  .opts.q-stroke .opt[data-opt="Run around backhand"] { grid-column: 1; grid-row: 2; }
+  .opts.q-stroke .opt[data-opt="Forehand"]            { grid-column: 2; grid-row: 1 / 3; }
+  /* Stay is a little lighter, like home base (not when it's the chosen answer). */
+  .opts.q-move .opt[data-opt="Stay"]:not(.chosen) { background: #2b5c43; }
+  .opt {
+    padding: 6px; font-size: 16px; font-weight: 600; line-height: 1.15;
+    background: var(--panel-2); border-color: rgba(255,255,255,0.08);
+  }
+  .opt:disabled { cursor: default; opacity: 0.45; }
+  .opt.chosen { background: var(--ball); color: #1b2a0c; font-weight: 800; opacity: 1; }
+  .opt.pop { animation: pop 0.22s ease; }
+  @keyframes pop { 50% { transform: scale(1.06); } }
+
+  /* Summary rows (just information: not tappable) */
+  .rows { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .row {
+    flex: 1; display: flex; align-items: center; gap: 8px; text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding: 0 2px; font-size: 15px;
+  }
+  .row:last-child { border-bottom: none; }
+  .row.two { flex-direction: column; align-items: stretch; justify-content: center; gap: 2px; }
+  .row-main { display: flex; align-items: center; gap: 8px; width: 100%; }
+  .row:not(.two) .row-main { flex: 1; }
+  .best2 { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px 0 34px; }
+  .sym {
+    flex: none; width: 26px; height: 26px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 800;
+  }
+  .sym svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+  .sym.best { background: rgba(95,209,122,0.18); color: var(--best); }
+  .sym.okay { background: rgba(242,193,78,0.18); color: var(--okay); }
+  .sym.wrong { background: rgba(255,122,107,0.18); color: var(--wrong); }
+  .sym.skip { background: rgba(185,203,189,0.15); color: var(--muted); }
+  .sym.skip svg { stroke-width: 6; }
+  .best2 b { color: var(--ink); font-weight: 700; }
+  .row .what { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .what span { color: var(--muted); }
+  .next-btn {
+    flex: none; height: 50px; font-size: 18px; font-weight: 800;
+    background: var(--ball); color: #1b2a0c; border-radius: 12px;
+  }
+
+  /* ---------- Pause overlay ---------- */
+  .pause-overlay {
+    position: fixed; inset: 0; background: var(--bg);
+    display: none; align-items: center; justify-content: center; flex-direction: column; gap: 12px;
+    z-index: 5;
+  }
+  .pause-overlay.show { display: flex; }
+  .pause-overlay h2 { margin: 0; font-size: 34px; }
+
+  /* Small phones: a shorter panel so the court keeps enough room. */
+  @media (max-height: 700px) {
+    .panel { height: 230px; gap: 6px; padding-bottom: 10px; }
+    .next-btn { height: 44px; }
+    .opt { font-size: 15px; }
+  }
+  /* Phone only: every screen is phone-sized. On a bigger screen it sits in a
+     phone-width column in the middle. */
+  .screen { left: 50%; right: auto; width: 100%; max-width: 430px; transform: translateX(-50%); }
+  @media (prefers-reduced-motion: reduce) {
+    .scorebox b.bump { animation: none; }
+    .opt.pop { animation: none; }
+    .screen { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== HTML ==================== -->
+
+<!-- Play screen: three fixed zones (top bar, court, panel) -->
+<section id="play" class="screen active">
+  <div class="topbar">
+    <div class="scorebox" id="scorebox" aria-label="Game score">
+      <span class="who">Them</span> <b id="scoreThem">0</b>
+      <span class="bar"></span>
+      <span class="who">You</span> <b id="scoreMe">0</b>
+    </div>
+    <div class="top-gap"></div>
+    <div class="timer-num" id="timerNum" aria-label="Seconds left">10s</div>
+    <button class="icon-btn" id="pauseBtn" title="Pause" aria-label="Pause">⏸</button>
+  </div>
+
+  <div class="court-wrap"><canvas id="court" aria-label="The court, seen from behind your baseline."></canvas></div>
+
+
+  <div class="panel" id="panel"></div>
+</section>
+
+<!-- End screen -->
+<section id="end" class="screen card-screen">
+  <a class="back-link" href="../../">← All games</a>
+  <div class="card">
+    <h2 id="endTitle">You broke serve!</h2>
+    <div class="result-score" id="endScore"></div>
+    <div class="report" id="endReport" aria-label="Best answers for each question"></div>
+    <button class="big-btn" id="againBtn">Play Again</button>
+  </div>
+</section>
+
+<!-- Pause overlay -->
+<div class="pause-overlay" id="pauseOverlay">
+  <h2>Paused</h2> <p style="margin:0;color:var(--muted);font-size:18px">No cheating</p>
+  <button class="big-btn" id="resumeBtn" style="max-width:240px">Resume</button>
+</div>
+
+<!-- ==================== JAVASCRIPT ==================== -->
+<script>
+"use strict";
+
+/* =========================================================
+   1. GAME_SPEC: every rule, number, and word in the game.
+   Change numbers here to tune the game.
+   All positions are in feet.
+   Side to side (x): 0 is the center line, positive is the player's right.
+   Up the court (y): 0 is the player's baseline, 39 is the net,
+   78 is the opponent's baseline.
+   ========================================================= */
+const GAME_SPEC = {
+  title: "Turn Based Tennis",
+
+  // Time for all three questions, in seconds.
+  timeLimit: 10,
+  // If time runs out, you never hit the ball: it goes past you and the
+  // point goes to them. (The plan's "+10% miss chance" rule was replaced.)
+  // How far behind your baseline the ball rolls on screen (feet).
+  timeoutBallPastFeet: 6,
+
+  court: {
+    length: 78,
+    net: 39,
+    singlesHalfWidth: 13.5,   // 27 ft wide
+    doublesHalfWidth: 18,     // alleys add 4.5 ft each side (they count as out)
+    serviceLineFromNet: 21,
+    netHeight: 3,
+  },
+
+  // Smart recovery (you added this; the plan always recovered to center).
+  // After your shot, you recover to the middle of the replies your opponent can
+  // hit, not the middle of the court. This is how far from center you stand
+  // (feet) for each shot: + means on the side you hit from, - means past center
+  // toward the other side. The next rally ball is judged from this spot.
+  recovery: {
+    "Deep crosscourt": 2,   // a step short of center: crosscourt is easy to recover from
+    "Deep middle": 0,       // dead center
+    "Down the line": -3,    // past center: they can hit crosscourt into your open court
+    "Lob": 1,
+    "Drop shot": -2,
+  },
+
+  // Where the player is judged from. The Move answer doesn't change this.
+  playerSpots: {
+    return: { x: 6, y: -2 },  // deuce side: 6 ft right of center, 2 ft behind baseline (ad side: 6 ft left)
+    rally:  { x: 0, y: -2 },  // center of the baseline, 2 ft behind it
+  },
+
+  // Where the opponent stands to serve, for a serve to your deuce side
+  // (their side, on your left). Ad-side serves are the mirror image.
+  serverSpot: { x: -3, y: 79 },
+
+  // Rule Book numbers.
+  // Move is judged by how far to the side the ball reaches you (you changed this
+  // from the plan, which used the bounce spot and one 4 ft line):
+  //   closer than moveStayFeet      -> Stay is best
+  //   moveStayFeet to moveReachFeet -> step that way is best, Stay is okay (you can stretch)
+  //   farther than moveReachFeet    -> step that way is best, Stay is wrong
+  // Stepping the other way when a step is best is an automatic miss.
+  moveStayFeet: 3,
+  moveReachFeet: 6,
+  wideFeet: 9,            // 9 ft or more from center = "wide"
+  runAroundMaxFeet: 6,    // run around backhand is only okay within 6 ft
+  // Stroke is judged by where the ball reaches you, not where it bounces.
+  // A ball that reaches you this close to straight-on comes "straight at you":
+  // forehand and backhand both count as best. (Added by you, not in the plan.)
+  bodyZoneFeet: 1.5,
+
+  points: { best: 2, okay: 1, wrong: 0 },
+
+  // The three questions and their answers, in order.
+  questions: [
+    { id: "move",   label: "1. Move",   options: ["Step left", "Step right", "Move back", "Move in", "Stay"] },
+    { id: "stroke", label: "2. Stroke", options: ["Forehand", "Backhand", "Run around backhand"] },
+    { id: "shot",   label: "3. Shot",   options: ["Left corner", "Deep middle", "Right corner", "Lob", "Drop shot"] },
+  ],
+
+  // ----- Left corner and Right corner (you added these) -----
+  // The player picks a corner, left or right as they see it on screen. The
+  // game works out whether that corner is crosscourt or down the line from
+  // where the ball reaches them: hit from the right, the left corner is
+  // crosscourt and the right corner is down the line (and the other way round).
+  // The Rule Book below still talks in crosscourt and down the line; the
+  // game turns those into the right corner for each ball.
+  // A ball that reaches you this close to the center of the court has no
+  // crosscourt side: either corner counts as crosscourt or down the line,
+  // whichever the Rule Book likes better, and after hitting one you recover
+  // to dead center.
+  middleZoneFeet: 1.5,
+  corners: { "Left corner": -1, "Right corner": 1 },
+
+  // ----- Serves -----
+  serveKinds: {
+    fast: { label: "Fast flat serve",   pace: "fast",   bounce: "low",  situation: "defending",
+            situationWhy: "A fast serve puts you on defense." },
+    spin: { label: "Spin serve",        pace: "medium", bounce: "high", situation: "neutral",
+            situationWhy: "A spin serve is a neutral ball." },
+    slow: { label: "Slow second serve", pace: "slow",   bounce: "high", situation: "attacking",
+            situationWhy: "A slow second serve is a chance to attack." },
+  },
+  // Serve targets for the deuce side (your right-hand box). On the ad side
+  // the same targets are mirrored into your left-hand box.
+  // (You added alternating sides; the plan served every point to the deuce side.)
+  serveTargets: {
+    wide: { label: "Wide", x: [10, 12.5] },
+    body: { label: "Body", x: [5, 7] },
+    t:    { label: "T",    x: [1, 2] },
+  },
+  serveDepth: [21, 26],   // feet from the player's baseline
+
+  // ----- Rally balls -----
+  depths: {
+    deep:  { label: "Deep",       y: [2, 8] },
+    mid:   { label: "Mid-court",  y: [10, 17] },
+    short: { label: "Short",      y: [19, 28] },
+  },
+  sideRanges: { normal: [0.5, 9], wide: [9, 12.5] },
+
+  // Each rally ball type. A choice listed twice is twice as likely.
+  rallyTypes: {
+    attackable: { pace: ["slow"],   depth: ["short", "mid"], wide: [false],
+                  bounce: ["high", "high", "high", "waist"] },
+    tough:      { // half the time deep and fast, half the time wide and fast
+                  variants: [
+                    { pace: ["fast"], depth: ["deep"],        wide: [false] },
+                    { pace: ["fast"], depth: ["deep", "mid"], wide: [true] },
+                  ],
+                  bounce: ["low", "waist"] },
+    normal:     { pace: ["medium"], depth: ["deep", "mid"], wide: [false],
+                  bounce: ["waist", "waist", "waist", "high", "low"] },
+  },
+
+  // How often the opponent aims at your open court: the side of the court
+  // farther from where you stand. Better balls are better aimed.
+  // (You added this; the plan placed rally balls left or right at random.)
+  openCourtAim: { tough: 0.75, normal: 0.60, attackable: 0.40 },
+
+  // The player's last turn score sets the odds of the next rally ball.
+  nextBallOdds: [
+    { maxScore: 1, attackable: 0.08, tough: 0.50, normal: 0.42 },
+    { maxScore: 3, attackable: 0.15, tough: 0.30, normal: 0.55 },
+    { maxScore: 5, attackable: 0.30, tough: 0.15, normal: 0.55 },
+    { maxScore: 6, attackable: 0.45, tough: 0.08, normal: 0.47 },
+  ],
+
+
+  // Words on the clue card beside the paused ball.
+  // Top line is always pace, bottom line is always bounce. The two word sets never overlap.
+  clueTags: {
+    serveKind: { fast: "Fast flat serve", spin: "Spin serve", slow: "Slow 2nd serve" },
+    pace:      { fast: "Fast", medium: "Medium", slow: "Slow" },
+    bounce:    { high: "High", waist: "Waist", low: "Low" },
+  },
+
+  // ----- Automatic misses: you can't reach the ball, so you never hit it -----
+  // The ball goes past you and the point goes to them. (Added by you, not in the plan.)
+  autoMiss: {
+    // Too far to reach: the ball reaches you farther to the side than you can
+    // run in time (see reachFeet). Faster balls give you less time.
+    outOfReach: true,
+    // A step is best (the ball reaches you 3+ ft to one side) and you step the other way.
+    wrongWayStep: true,
+    // A short rally ball and your move is wrong (not Move in, and not a step
+    // toward a ball 3+ ft to the side): it bounces twice first.
+    shortBallNotIn: true,
+    // A wide rally ball (9+ ft out) and you pick the wrong stroke: you can't reach it.
+    wideBallWrongStroke: true,
+    // A deep, fast rally ball and you move in: it jams you and goes past.
+    deepFastMoveIn: true,
+  },
+  // How far to the side the ball can reach you and you still get there in time
+  // (feet), by the ball's pace. Measured where the ball reaches you, like Move.
+  // Beyond this it's "Too far", even with the right answers.
+  reachFeet: { fast: 14, medium: 16, slow: 18 },
+
+  // For show: on a short ball you don't reach, where it bounces the second time
+  // (feet past its first bounce, toward you).
+  secondBounceFeet: 7,
+  // For show: how far your circle moves when you can't reach the ball (feet).
+  wrongStepShowFeet: 3,
+
+  // ----- Does your shot go in? (changed from the plan's turn-score table) -----
+  // Every shot starts with a small miss chance. Each answer that isn't the best
+  // adds its own cost. A wrong stroke costs the most.
+  // Example: wrong move + okay shot = 3% + 25% + 7% = 35% chance to miss.
+  playerMiss: {
+    base: 0.03,
+    cost: {
+      move:   { wrong: 0.25, okay: 0.08 },
+      stroke: { wrong: 0.35, okay: 0.10 },
+      shot:   { wrong: 0.20, okay: 0.07 },
+    },
+    // Hard balls are harder to get back, even with the right answers.
+    // Extra miss chance by rally ball type, and by kind of serve.
+    ballTypeExtra: { tough: 0.10, normal: 0, attackable: 0 },
+    serveKindExtra: { fast: 0.10, spin: 0, slow: 0 },
+    max: 0.95,
+    // How the ball misses depends on which mistake caused it.
+    // A wrong move = you're late. A wrong stroke = a mishit.
+    // A wrong shot (or bad luck on a perfect turn) misses the way that shot
+    // usually misses (see "shots" below).
+    causeMissTypes: {
+      move:   [["net", 0.5], ["wide", 0.5]],
+      stroke: [["net", 0.5], ["long", 0.5]],
+    },
+  },
+
+  // ----- What the opponent does after your shot goes in (index = your turn score 0 to 6) -----
+  // Miss chances: the plan had 3%–25%; you lowered them to 3%–13%, then
+  // raised them 60% so a 4.0-level player (about 87.5% best answers) breaks
+  // serve about half the time. A perfect player breaks about 95% of the time.
+  opponentMissChance:   [0.05, 0.06, 0.08, 0.11, 0.14, 0.18, 0.21],
+  opponentWinnerChance: [0.30, 0.30, 0.18, 0.07, 0.02, 0.02, 0.02],
+
+  // ----- Where the player's shot goes -----
+  // side: "opposite" or "same" as the side the player hit from.
+  // Left corner and Right corner fly like "Deep crosscourt" or "Down the
+  // line" below, whichever that corner is for the ball (see corners above).
+  shots: {
+    "Deep crosscourt":  { side: "opposite", x: 9, y: 71, arc: 7,  miss: [["long", 0.5], ["net", 0.5]] },
+    "Deep middle":      { side: "center",   x: 0, y: 72, arc: 7,  miss: [["long", 0.5], ["net", 0.5]] },
+    "Down the line":    { side: "same",     x: 9, y: 71, arc: 6,  miss: [["wide", 0.6], ["net", 0.4]] },
+    "Lob":              { side: "opposite", x: 5, y: 73, arc: 26, miss: [["long", 1]] },
+    "Drop shot":        { side: "same",     x: 4, y: 45, arc: 5,  miss: [["net", 1]] },
+  },
+
+  // ----- How a miss looks -----
+  opponentMissTypes: [["net", 0.5], ["long", 0.3], ["wide", 0.2]],
+  longMissFeet: [2, 5],   // past the baseline
+  wideMissFeet: [1, 4],   // outside the singles sideline
+
+  // ----- Rule Book: Shot -----
+  // "short" shows under a wrong or okay answer on the result card.
+  // "why" is the full reason; it isn't shown in the game right now.
+  // There's no "Approach the net" shot: the game can't show net play yet,
+  // so down the line is the attacking answer. (Changed from the plan.)
+  shotRules: {
+    "return-defending":         { best: ["Deep middle", "Deep crosscourt"], okay: [],
+                                  why: "Big serve: block it back deep.", short: "block it deep" },
+    "return-neutral":           { best: ["Deep crosscourt", "Deep middle"], okay: ["Down the line"],
+                                  why: "Start the rally safely.", short: "start safely" },
+    "return-attacking":         { best: ["Down the line"], okay: ["Deep crosscourt"],
+                                  why: "Weak serve: step in and attack it down the line.", short: "attack it" },
+    "rally-defending":          { best: ["Deep crosscourt"], okay: ["Lob"],
+                                  why: "High and crosscourt is safest and buys time.", short: "safest, buys time" },
+    "rally-neutral":            { best: ["Deep crosscourt"], okay: ["Deep middle", "Down the line"],
+                                  why: "Crosscourt goes over the low middle of the net and has the most court.", short: "low net, most court" },
+    "rally-attacking-short":    { best: ["Down the line"], okay: ["Drop shot"],
+                                  why: "Short ball: attack it down the line.", short: "attack it" },
+    "rally-attacking-sitting":  { best: ["Down the line"], okay: ["Deep crosscourt"],
+                                  why: "Change direction and take control.", short: "take control" },
+  },
+
+  // Short names for the "Best:" line under a wrong or okay answer.
+  bestNames: {
+    "Step left": "step left", "Step right": "step right", "Move back": "move back", "Move in": "move in", "Stay": "stay",
+    "Forehand": "forehand", "Backhand": "backhand", "Run around backhand": "run around",
+    "Left corner": "left corner", "Right corner": "right corner",
+    "Deep crosscourt": "crosscourt", "Deep middle": "middle", "Down the line": "down the line",
+    "Lob": "lob", "Drop shot": "drop shot",
+  },
+
+
+  // ----- Words the game says -----
+  text: {
+    noAnswer: "No answer",
+    // A short label drawn on the court where a point-ending ball ended up.
+    // The label on the court says only who won the point; the court shows why.
+    courtLabels: { me: "You won it", them: "They won it" },
+    // When you can't reach the ball, the court label starts with the reason,
+    // e.g. "Too far · They won it".
+    cantReachWords: { outOfReach: "Too far", wrongWay: "Wrong way", twoBounces: "Two bounces",
+                      wideWrongStroke: "Wrong stroke", jammed: "Jammed" },
+    // On the card, answers you never got to use (you didn't reach the ball)
+    // aren't graded. They say this instead.
+    didntReach: "didn't reach it",
+    winTitle: "You broke serve!",
+    loseTitle: "They held serve.",
+  },
+
+  // After the bounce, the court shows only a short stub of the ball's path,
+  // the same length on every ball, so it never hints at Move in vs Stay.
+  afterBounceStubFeet: 5,
+
+  // For show only: you run to the ball and hit it, and you stay there until the
+  // next ball, when you glide to your recovery spot. You stand this far to the
+  // side of the ball (feet) so it's on your forehand or backhand side, and this
+  // far behind it.
+  hitStandSide: 2.5,
+  hitStandBehind: 1,
+
+  // How long each animation takes, in seconds.
+  timing: { incoming: 0.9, finish: 0.45, shot: 0.8, finalBall: 0.7 },
+};
+
+
+/* =========================================================
+   2. STATE: everything that changes while you play.
+   ========================================================= */
+const state = {
+  screen: "play",
+  me: 0, them: 0,          // points won this game
+  pointNo: 1, ballNo: 1,
+  phase: "idle",           // idle | incoming | choose | resolve | feedback
+  paused: false,
+  ball: null,              // the ball coming at the player right now
+  answers: {},             // { move, stroke, shot }
+  qIndex: 0,               // which question is current
+  timeLeft: GAME_SPEC.timeLimit,
+  lastTurn: null,          // result of the last judged turn
+  turns: [],               // every turn, for the end screen
+  oppPos: { ...GAME_SPEC.serverSpot },
+  gameOver: false,
+};
+
+
+/* =========================================================
+   3. RULES: build balls, judge answers, roll outcomes.
+   Nothing here draws on the screen.
+   ========================================================= */
+
+// --- Small helpers ---
+function rand(min, max) { return min + Math.random() * (max - min); }
+function pickOne(list) { return list[Math.floor(Math.random() * list.length)]; }
+// Pick from [["a", 0.5], ["b", 0.5]] by chance.
+function pickWeighted(pairs) {
+  let r = Math.random(), total = 0;
+  for (const [value, chance] of pairs) { total += chance; if (r < total) return value; }
+  return pairs[pairs.length - 1][0];
+}
+function round1(n) { return Math.round(n * 10) / 10; }
+
+// Where the ball goes after it bounces, until the player hits it.
+function contactPoint(from, land) {
+  const dx = land.x - from.x, dy = land.y - from.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const toBaseline = (land.y - (-3)) / (-dy / len); // distance until y = -3
+  const go = Math.max(3, Math.min(10, toBaseline));
+  return { x: land.x + dx / len * go, y: land.y + dy / len * go };
+}
+
+// Make the opponent's serve.
+// Which side the serve goes to: deuce (your right box) when an even number of
+// points has been played in the game (0-0, 15-15, deuce...), ad (your left box) when odd.
+function serveSide(me, them) { return (me + them) % 2 === 0 ? "deuce" : "ad"; }
+
+// Mirror a spot for the ad side.
+function sideSpot(p, side) { return side === "ad" ? { x: -p.x, y: p.y } : { x: p.x, y: p.y }; }
+
+function makeServe(courtSide) {
+  const S = GAME_SPEC;
+  courtSide = courtSide || "deuce";
+  const m = courtSide === "ad" ? -1 : 1;
+  const kindKey = pickOne(Object.keys(S.serveKinds));
+  const targetKey = pickOne(Object.keys(S.serveTargets));
+  const kind = S.serveKinds[kindKey], target = S.serveTargets[targetKey];
+  const spot = sideSpot(S.playerSpots.return, courtSide);
+  const land = { x: m * rand(target.x[0], target.x[1]), y: rand(S.serveDepth[0], S.serveDepth[1]) };
+  const from = sideSpot(S.serverSpot, courtSide);
+  const dx = land.x - spot.x;               // where it bounces, from you (for Move)
+  const contact = contactPoint(from, land);
+  const cdx = contact.x - spot.x;            // where it reaches you (for Stroke)
+  return {
+    isServe: true, kindKey, targetKey, courtSide,
+    pace: kind.pace, bounce: kind.bounce, depth: null,
+    land, from, contact, spot,
+    dx, cdx, side: cdx >= 0 ? "forehand" : "backhand", wide: false,
+  };
+}
+
+// Pick the next rally ball type from the player's last turn score.
+function pickRallyType(lastScore) {
+  const row = GAME_SPEC.nextBallOdds.find(r => lastScore <= r.maxScore);
+  return pickWeighted([["attackable", row.attackable], ["tough", row.tough], ["normal", row.normal]]);
+}
+
+// Make a rally ball hit from the opponent's spot.
+// Your open court: the side of center farther from where you stand
+// (+1 = your right, -1 = your left, 0 = you're dead center, so no open side).
+function openSide(spot) { return spot.x > 0.01 ? -1 : spot.x < -0.01 ? 1 : 0; }
+
+// spot = where you stand (your recovery spot). Side and distance are measured from it.
+function makeRallyBall(type, from, spot) {
+  const S = GAME_SPEC;
+  const t = S.rallyTypes[type];
+  const shape = t.variants ? pickOne(t.variants) : t;
+  const pace = pickOne(shape.pace);
+  const depth = pickOne(shape.depth);
+  const wide = pickOne(shape.wide);
+  const bounce = pickOne(t.bounce);
+  const range = wide ? S.sideRanges.wide : S.sideRanges.normal;
+  spot = spot || S.playerSpots.rally;
+  // Left or right? Usually toward your open court (the side farther from you).
+  const open = openSide(spot);
+  const sign = open && Math.random() < (S.openCourtAim[type] ?? 0.5) ? open
+             : open ? -open
+             : (Math.random() < 0.5 ? -1 : 1);
+  const land = { x: sign * rand(range[0], range[1]), y: rand(S.depths[depth].y[0], S.depths[depth].y[1]) };
+  const dx = land.x - spot.x;               // where it bounces, from you (for Move)
+  const contact = contactPoint(from, land);
+  const cdx = contact.x - spot.x;            // where it reaches you (for Stroke)
+  return {
+    isServe: false, type,
+    pace, bounce, depth,
+    land, from: { ...from }, contact, spot,
+    dx, cdx, side: cdx >= 0 ? "forehand" : "backhand",
+    wide: Math.abs(land.x) >= S.wideFeet,
+  };
+}
+
+// The clue words for the card beside the paused ball.
+function clueTags(ball) {
+  const T = GAME_SPEC.clueTags;
+  // No "where it's aimed", "side", or "depth" tags: you read those from the court.
+  if (ball.isServe) return [T.serveKind[ball.kindKey]];
+  return [T.pace[ball.pace], T.bounce[ball.bounce]];
+}
+
+// Label the moment: attacking, neutral, or defending. Also says why.
+function situationOf(ball) {
+  const S = GAME_SPEC;
+  if (ball.isServe) {
+    const k = S.serveKinds[ball.kindKey];
+    return { label: k.situation, why: k.situationWhy };
+  }
+  const deep = ball.depth === "deep", fast = ball.pace === "fast";
+  if (deep && fast) return { label: "defending", why: "Deep and fast puts you on defense." };
+  if (Math.abs(ball.land.x) >= S.wideFeet) return { label: "defending", why: "A wide ball pulls you off the court." };
+  if (fast && ball.bounce === "low") return { label: "defending", why: "Fast and low is hard to attack." };
+  if (ball.depth === "short") return { label: "attacking", why: "A short ball is a chance to attack." };
+  if (ball.pace === "slow" && ball.bounce === "high" && !deep)
+    return { label: "attacking", why: "A slow, high, sitting ball is a chance to attack." };
+  return { label: "neutral", why: "Nothing special about this ball: it's neutral." };
+}
+
+// Rule Book: Move. Returns { best:[...], okay:[...], why }.
+function moveRule(ball) {
+  const S = GAME_SPEC;
+  // Measured where the ball reaches you (cdx), not where it bounces.
+  const d = ball.cdx, dist = Math.abs(d);
+  const dir = d > 0 ? "right" : "left";
+  const stepWay = d > 0 ? "Step right" : "Step left";
+  const fast = ball.pace === "fast";
+  const deep = ball.depth === "deep";
+  const ft = Math.round(dist);
+  const stretch = dist <= S.moveReachFeet; // close enough to reach by stretching
+  const what = ball.isServe ? "serve" : "ball";
+  if (ball.isServe) {
+    const back = fast ? ["Move back"] : [];
+    const slow = ball.kindKey === "slow";
+    // A slow second serve: step in and take it early (it matches the Shot rule "attack it").
+    if (slow && dist < S.moveStayFeet) return {
+      best: ["Move in"], okay: ["Stay"],
+      why: "A slow second serve: step in and take it early. Staying put is okay.",
+      short: "slow serve: step in",
+    };
+    if (dist >= S.moveStayFeet) return {
+      best: [stepWay], okay: (stretch ? ["Stay"] : []).concat(back, slow ? ["Move in"] : []),
+      why: `The serve reaches you about ${ft} ft to your ${dir}: step that way.` + (stretch ? " Staying and stretching is okay." : ""),
+      short: `serve comes ${ft} ft to your ${dir}`,
+    };
+    return {
+      best: ["Stay"], okay: back,
+      why: "The serve comes right to you: stay set." + (fast ? " Moving back to buy time is okay too." : ""),
+      short: "serve comes right at you",
+    };
+  }
+  // A short ball: move in. If it also comes 3+ ft to the side, stepping that
+  // way is okay too (you run in on an angle). Anything else is a two-bounce miss.
+  if (ball.depth === "short") {
+    if (dist >= S.moveStayFeet) return {
+      best: ["Move in"], okay: [stepWay],
+      why: `The ball lands short, about ${ft} ft to your ${dir}: move in. Stepping that way is okay too.`,
+      short: `short ball, ${ft} ft to your ${dir}`,
+    };
+    return { best: ["Move in"], okay: [], why: "The ball lands short: move in to reach it.", short: "short ball" };
+  }
+  // A deep, high ball: move back to take it at a comfortable height
+  // (you added this, so the bounce clue matters for Move).
+  const deepHigh = deep && ball.bounce === "high";
+  if (dist >= S.moveStayFeet) return {
+    best: [stepWay], okay: (stretch ? ["Stay"] : []).concat((deep && fast) || deepHigh ? ["Move back"] : []),
+    why: `The ${what} reaches you about ${ft} ft to your ${dir}: step that way.` + (stretch ? " Staying and stretching is okay." : ""),
+    short: `${what} comes ${ft} ft to your ${dir}`,
+  };
+  if (deep && fast) return { best: ["Move back"], okay: ["Stay"], why: "Deep and fast right at you: move back to make room.", short: "deep and fast at you" };
+  if (deepHigh) return { best: ["Move back"], okay: ["Stay"], why: "Deep and high right at you: move back so it drops to a good height.", short: "deep and high at you" };
+  return { best: ["Stay"], okay: [], why: "The ball comes right to you: stay balanced.", short: "ball comes to you" };
+}
+
+// Rule Book: Stroke.
+function strokeRule(ball) {
+  const S = GAME_SPEC;
+  // Judged by where the ball reaches you (cdx), not where it bounces.
+  if (Math.abs(ball.cdx) <= S.bodyZoneFeet) return {
+    best: ["Forehand", "Backhand"], okay: [],
+    why: "The ball comes straight at you: forehand or backhand both work.", short: "ball straight at you",
+  };
+  if (ball.side === "forehand") return { best: ["Forehand"], okay: [], why: "The ball comes to your right side: forehand.", short: "ball on your right" };
+  // Running around is okay on a close, easy ball. On a return, only a slow
+  // second serve is easy enough (you added this; serves have no depth, so
+  // the rally check let you run around spin serves too).
+  const easy = ball.isServe ? ball.kindKey === "slow" : ball.pace !== "fast" && ball.depth !== "deep";
+  const canRunAround = Math.abs(ball.cdx) <= S.runAroundMaxFeet && easy;
+  return {
+    best: ["Backhand"], okay: canRunAround ? ["Run around backhand"] : [],
+    why: "The ball comes to your left side: backhand." +
+      (canRunAround ? " Running around it is okay on a close, easy ball."
+       : ball.isServe ? " On a return, running around only works on a slow second serve."
+                      : " Running around only works when the ball is close, not fast, and not deep."),
+    short: "ball on your left",
+  };
+}
+
+// Rule Book: Shot.
+function shotRule(ball, situation) {
+  let key;
+  if (ball.isServe) key = "return-" + situation;
+  else if (situation === "attacking") key = ball.depth === "short" ? "rally-attacking-short" : "rally-attacking-sitting";
+  else key = "rally-" + situation;
+  const rule = GAME_SPEC.shotRules[key];
+  // The Rule Book says crosscourt and down the line. Turn those into the
+  // corner that is crosscourt or down the line for this ball.
+  const contact = ball.contact;
+  const middle = inMiddleZone(contact);
+  const cornerNames = Object.keys(GAME_SPEC.corners);
+  const toCorners = name =>
+    name !== "Deep crosscourt" && name !== "Down the line" ? [name]
+    : middle ? cornerNames
+    : cornerNames.filter(c => cornerKind(c, contact) === name);
+  const best = [...new Set(rule.best.flatMap(toCorners))];
+  const okay = [...new Set(rule.okay.flatMap(toCorners))].filter(n => !best.includes(n));
+  // The result card names the button to press: "left corner" or
+  // "right corner". From the middle zone both corners are best, so the card
+  // says "either corner".
+  const names = {};
+  if (middle) names.either = "either corner";
+  return { ...rule, best, okay, names };
+}
+
+// Is the ball reaching you so close to the center that neither corner is crosscourt?
+function inMiddleZone(contact) { return Math.abs(contact.x) <= GAME_SPEC.middleZoneFeet; }
+
+// Which side of the court you hit from: 1 = right, -1 = left.
+function hitSideOf(contact) { return contact.x >= 0 ? 1 : -1; }
+
+// What a shot really is for this ball. A corner becomes "Deep crosscourt" or
+// "Down the line". Other shots stay as they are.
+function cornerKind(shotName, contact) {
+  const side = GAME_SPEC.corners[shotName];
+  if (!side) return shotName;
+  if (inMiddleZone(contact)) return "Deep crosscourt";
+  return side === -hitSideOf(contact) ? "Deep crosscourt" : "Down the line";
+}
+
+// Mark one answer: best, okay, or wrong.
+function markAnswer(answer, rule) {
+  if (answer && rule.best.includes(answer)) return "best";
+  if (answer && rule.okay.includes(answer)) return "okay";
+  return "wrong";
+}
+
+// Judge all three answers. Returns the turn score (0 to 6) and the marks.
+function judgeTurn(ball, answers) {
+  const situation = situationOf(ball);
+  const rules = {
+    move: moveRule(ball),
+    stroke: strokeRule(ball),
+    shot: shotRule(ball, situation.label),
+  };
+  let score = 0;
+  const marks = GAME_SPEC.questions.map(q => {
+    const answer = answers[q.id] || null;
+    const mark = markAnswer(answer, rules[q.id]);
+    score += GAME_SPEC.points[mark];
+    return { q: q.id, label: q.label.replace(/^\d\.\s*/, ""), answer, mark, best: rules[q.id].best, names: rules[q.id].names, why: rules[q.id].why, short: rules[q.id].short };
+  });
+  return { score, marks, situation };
+}
+
+// Where the player's shot is aimed.
+function shotTarget(shotName, contact) {
+  const s = GAME_SPEC.shots[cornerKind(shotName, contact)];
+  const corner = GAME_SPEC.corners[shotName];
+  if (corner) return { x: corner * s.x, y: s.y };
+  const hitSide = hitSideOf(contact);
+  let x = 0;
+  if (s.side === "opposite") x = -hitSide * s.x;
+  if (s.side === "same") x = hitSide * s.x;
+  return { x, y: s.y };
+}
+
+// Where a missed ball ends up. towardOpp = the ball is going to the opponent's side.
+function missSpot(type, from, aim, towardOpp) {
+  const S = GAME_SPEC;
+  const net = S.court.net;
+  const along = (y) => { // point on the line from -> aim at depth y
+    const t = (y - from.y) / ((aim.y - from.y) || 1);
+    return { x: from.x + (aim.x - from.x) * t, y };
+  };
+  if (type === "net") return along(net);
+  if (type === "long") {
+    const past = rand(S.longMissFeet[0], S.longMissFeet[1]);
+    return along(towardOpp ? S.court.length + past : -past);
+  }
+  // wide
+  const sign = aim.x === 0 ? (Math.random() < 0.5 ? -1 : 1) : Math.sign(aim.x);
+  return { x: sign * (S.court.singlesHalfWidth + rand(S.wideMissFeet[0], S.wideMissFeet[1])), y: aim.y };
+}
+
+// Where the ball ends up when you never hit it: it keeps going on its line,
+// past you, and stops a little behind your baseline (or just outside the
+// doubles sideline on a wide ball, so it stays on screen).
+function ballPastYou(ball) {
+  const S = GAME_SPEC;
+  const dx = ball.contact.x - ball.land.x, dy = ball.contact.y - ball.land.y;
+  const len = Math.hypot(dx, dy) || 1;
+  let go = (ball.contact.y + S.timeoutBallPastFeet) / (-dy / len);
+  if (Math.abs(dx) > 0.001) {
+    const edge = Math.sign(dx) * (S.court.doublesHalfWidth + 0.5);
+    go = Math.min(go, Math.max(0, (edge - ball.contact.x) / (dx / len)));
+  }
+  return { x: ball.contact.x + dx / len * go, y: ball.contact.y + dy / len * go };
+}
+
+// Is this an automatic miss? Returns the reason, or null.
+function autoMissReason(ball, judged) {
+  const A = GAME_SPEC.autoMiss;
+  const move = judged.marks.find(m => m.q === "move");
+  const opposite = { "Step left": "Step right", "Step right": "Step left" };
+  const stroke = judged.marks.find(m => m.q === "stroke");
+  if (A.outOfReach && Math.abs(ball.cdx) > (GAME_SPEC.reachFeet[ball.pace] || 99)) return "outOfReach";
+  if (A.wrongWayStep && move.answer && move.best.some(b => opposite[b] === move.answer)) return "wrongWay";
+  if (ball.isServe) return null; // the other rules are about rally balls
+  if (A.shortBallNotIn && ball.depth === "short" && move.answer && move.mark === "wrong") return "twoBounces";
+  if (A.wideBallWrongStroke && ball.wide && stroke.answer && stroke.mark === "wrong") return "wideWrongStroke";
+  if (A.deepFastMoveIn && ball.depth === "deep" && ball.pace === "fast" && move.answer === "Move in") return "jammed";
+  return null;
+}
+
+// After the answer: roll what happens. Returns everything the screen needs.
+function resolveTurn(ball, judged, timedOut) {
+  const S = GAME_SPEC;
+  const score = judged.score;
+
+  // 0. Time ran out: you never hit it. The ball goes past you. Point to them.
+  if (timedOut) return { score, outcome: "timeout", pointTo: "them", pastEnd: ballPastYou(ball) };
+
+  // 0b. Automatic misses: you went the wrong way and can't reach the ball.
+  const why = autoMissReason(ball, judged);
+  if (why) {
+    let pastEnd = ballPastYou(ball);
+    if (why === "twoBounces") {
+      // It bounces again in front of you and stops there.
+      const dx = ball.contact.x - ball.land.x, dy = ball.contact.y - ball.land.y, len = Math.hypot(dx, dy) || 1;
+      pastEnd = { x: ball.land.x + dx / len * S.secondBounceFeet, y: ball.land.y + dy / len * S.secondBounceFeet };
+    }
+    return { score, outcome: "cantReach", reason: why, pointTo: "them", pastEnd };
+  }
+
+  const shotName = state.answers.shot;
+  const aim = shotTarget(shotName, ball.contact);
+  // What the shot really is (a corner becomes crosscourt or down the line).
+  const shotKind = cornerKind(shotName, ball.contact);
+  const result = { aim, shotName, shotKind, score };
+
+  // 1. Does the player's shot go in? Each answer that isn't the best adds its cost.
+  const P = S.playerMiss;
+  let missChance = P.base + (ball.isServe ? (P.serveKindExtra[ball.kindKey] || 0) : (P.ballTypeExtra[ball.type] || 0));
+  const causes = [];
+  for (const m of judged.marks) {
+    if (m.mark === "best") continue;
+    const c = P.cost[m.q][m.mark];
+    missChance += c;
+    causes.push([m.q, c]);
+  }
+  missChance = Math.min(P.max, missChance);
+  result.missChance = missChance;
+  if (Math.random() < missChance) {
+    // Blame one mistake (bigger costs are more likely to be the cause).
+    // It decides how the ball misses.
+    let cause = "shot";
+    if (causes.length) {
+      const total = causes.reduce((a, [, c]) => a + c, 0);
+      cause = pickWeighted(causes.map(([q, c]) => [q, c / total]));
+    }
+    const type = pickWeighted(cause === "shot" ? S.shots[shotKind].miss : P.causeMissTypes[cause]);
+    result.missCause = cause;
+    result.outcome = "playerMiss";
+    result.missType = type;
+    result.playerEnd = missSpot(type, ball.contact, aim, true);
+    result.pointTo = "them";
+    return result;
+  }
+  result.playerEnd = aim;
+  // Smart recovery: where you'll stand for their next ball (also where their winner avoids).
+  // A corner hit from the middle zone: recover to dead center.
+  const hitSide = hitSideOf(ball.contact);
+  const fromMiddle = S.corners[shotName] && inMiddleZone(ball.contact);
+  result.recoverSpot = { x: fromMiddle ? 0 : hitSide * (S.recovery[shotKind] || 0), y: S.playerSpots.rally.y };
+  // The opponent runs to cover the shot.
+  result.oppHit = { x: aim.x, y: Math.min(aim.y + 6, 82) };
+
+  // 2. Does the opponent miss?
+  if (Math.random() < S.opponentMissChance[score]) {
+    const type = pickWeighted(S.opponentMissTypes);
+    const aimBack = makeRallyBall("normal", result.oppHit).land;
+    result.outcome = "opponentMiss";
+    result.missType = type;
+    result.oppEnd = missSpot(type, result.oppHit, aimBack, false);
+    result.pointTo = "me";
+    return result;
+  }
+
+  // 3. Does the opponent hit a winner?
+  if (Math.random() < S.opponentWinnerChance[score]) {
+    // A winner goes into your open court (random side if you're dead center).
+    const sign = openSide(result.recoverSpot) || (Math.random() < 0.5 ? -1 : 1);
+    result.outcome = "opponentWinner";
+    result.oppLand = { x: sign * rand(11, 13), y: rand(3, 8) };
+    result.oppEnd = contactPoint(result.oppHit, result.oppLand);
+    result.pointTo = "them";
+    return result;
+  }
+
+  // 4. The rally goes on. The next ball depends on this turn's score.
+  result.outcome = "rally";
+  result.nextType = pickRallyType(score);
+  result.pointTo = null;
+  return result;
+}
+
+// Game scoring: 0, 15, 30, 40, deuce, advantage.
+// Each side's score word: 0, 15, 30, 40, then Ad at advantage and Win at the end.
+// At deuce both sides show 40.
+function scoreWords(me, them) {
+  const names = ["0", "15", "30", "40"];
+  const winner = gameWinner(me, them);
+  if (winner) return winner === "me"
+    ? { them: names[Math.min(them, 3)], me: "Win" }
+    : { them: "Win", me: names[Math.min(me, 3)] };
+  if (me >= 3 && them >= 3) {
+    if (me === them) return { them: "40", me: "40" };
+    return me > them ? { them: "40", me: "Ad" } : { them: "Ad", me: "40" };
+  }
+  return { them: names[Math.min(them, 3)], me: names[Math.min(me, 3)] };
+}
+function gameWinner(me, them) {
+  if (me >= 4 && me - them >= 2) return "me";
+  if (them >= 4 && them - me >= 2) return "them";
+  return null;
+}
+
+// Report card for the end screen: for each question, how many of your answers
+// were the best one, out of every time it was asked (time-outs count as not best).
+function reportCard(turns) {
+  return GAME_SPEC.questions.map(q => {
+    let best = 0, total = 0;
+    // Answers that weren't graded (you didn't reach the ball) don't count.
+    for (const t of turns) for (const m of t.marks) if (m.q === q.id && m.mark !== "skip") { total += 1; if (m.mark === "best") best += 1; }
+    return { label: q.label.replace(/^\d\.\s*/, ""), best, total };
+  });
+}
+
+
+/* =========================================================
+   4. DRAWING: the court, ball, and paths.
+   This part only shows things. It never changes the rules.
+   ========================================================= */
+const canvas = document.getElementById("court");
+const ctx = canvas.getContext("2d");
+const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+
+/* =========================================================
+   SPRITES: the two players, drawn as grids of colored squares.
+   Each pose is 20 rows of 20 letters. A dot is an empty square. Every other
+   letter is a color from that sprite's palette. To change a square, change
+   its letter. Each sprite is about SPRITE_FEET tall on the court.
+   ========================================================= */
+const SPRITE_FEET = 5.6;
+const SPRITES = {
+  // You, seen from behind: black hair, brown skin, white shirt, burgundy shorts.
+  me: {
+    palette: { h: "#1a1a1a", s: "#a86b3c", t: "#ffffff", p: "#6e1b2e", k: "#222222",
+               r: "#d9d9d9", n: "rgba(207,233,255,0.5)", y: "#e6f53a" },
+    poses: {
+      ready: [
+        "........hhhh........",
+        ".......hhhhhh.......",
+        ".......hhhhhh.......",
+        ".......ssssss.......",
+        "........ssss........",
+        ".........ss.........",
+        "......tttttttt......",
+        ".....tttttttttt.....",
+        ".....stttttttts.....",
+        ".....s.tttttt.s.....",
+        ".....s.tttttt.s.....",
+        ".......tttttt.r.....",
+        ".......pppppp.r.....",
+        ".......pppppp.rr....",
+        ".......pp..pprnnr...",
+        ".......ss..ssrnnr...",
+        ".......ss..ssrnnr...",
+        ".......ss..ss.rr....",
+        "......kkk..kkk......",
+        "....................",
+      ],
+      forehand: [
+        "........hhhh........",
+        ".......hhhhhh.......",
+        ".......hhhhhh....rr.",
+        ".......ssssss...rnnr",
+        "........ssss....rnnr",
+        ".........ss.....rnnr",
+        "......tttttttt...rr.",
+        ".....tttttttttt..r..",
+        ".....sttttttttsss...",
+        ".....s.tttttt.......",
+        ".....s.tttttt.......",
+        ".......tttttt.......",
+        ".......pppppp.......",
+        ".......pppppp.......",
+        ".......pp..pp.......",
+        ".......ss..ss.......",
+        ".......ss..ss.......",
+        ".......ss..ss.......",
+        "......kkk..kkk......",
+        "....................",
+      ],
+      backhand: [
+        "........hhhh........",
+        ".......hhhhhh.......",
+        ".rr....hhhhhh.......",
+        "rnnr...ssssss.......",
+        "rnnr....ssss........",
+        "rnnr.....ss.........",
+        ".rr...tttttttt......",
+        "..r..tttttttttt.....",
+        "...sssttttttttts....",
+        ".......tttttt.s.....",
+        ".......tttttt.s.....",
+        ".......tttttt.......",
+        ".......pppppp.......",
+        ".......pppppp.......",
+        ".......pp..pp.......",
+        ".......ss..ss.......",
+        ".......ss..ss.......",
+        ".......ss..ss.......",
+        "......kkk..kkk......",
+        "....................",
+      ],
+      won: [
+        "........hhhh....y...",
+        ".......hhhhhh....y..",
+        ".......hhhhhh.......",
+        ".......ssssss.....y.",
+        "........ssss..ss....",
+        ".........ss...s.....",
+        "......tttttttts.....",
+        ".....ttttttttts.....",
+        ".....stttttttt......",
+        ".....s.tttttt.......",
+        ".....s.tttttt.......",
+        ".....r.tttttt.......",
+        ".....r.pppppp.......",
+        "....rr.pppppp.......",
+        "...rnnrpp..pp.......",
+        "...rnnrss..ss.......",
+        "...rnnrss..ss.......",
+        "....rr.ss..ss.......",
+        "......kkk..kkk......",
+        "....................",
+      ],
+    },
+  },
+  // Them, facing you: teal cap and shirt, light skin, white shorts.
+  them: {
+    palette: { c: "#2f8f84", s: "#f1c27d", e: "#1a1a1a", t: "#5ecfc0", p: "#ffffff", k: "#222222",
+               r: "#d9d9d9", n: "rgba(207,233,255,0.5)", y: "#e6f53a" },
+    poses: {
+      ready: [
+        "........cccc........",
+        ".......cccccc.......",
+        "......cccccccc......",
+        ".......sessse.......",
+        "........ssss........",
+        ".........ss.........",
+        "......tttttttt......",
+        ".....tttttttttt.....",
+        ".....stttttttts.....",
+        ".....s.tttttt.s.....",
+        ".....s.tttttt.s.....",
+        ".....r.tttttt.......",
+        ".....r.pppppp.......",
+        "....rr.pppppp.......",
+        "...rnnrpp..pp.......",
+        "...rnnrss..ss.......",
+        "...rnnrss..ss.......",
+        "....rr.ss..ss.......",
+        "......kkk..kkk......",
+        "....................",
+      ],
+      // Their forehand is on their right, which is your left.
+      forehand: [
+        "........cccc........",
+        ".......cccccc.......",
+        ".rr...cccccccc......",
+        "rnnr...sessse.......",
+        "rnnr....ssss........",
+        "rnnr.....ss.........",
+        ".rr...tttttttt......",
+        "..r..tttttttttt.....",
+        "...sssttttttttts....",
+        ".......tttttt.s.....",
+        ".......tttttt.s.....",
+        ".......tttttt.......",
+        ".......pppppp.......",
+        ".......pppppp.......",
+        ".......pp..pp.......",
+        ".......ss..ss.......",
+        ".......ss..ss.......",
+        ".......ss..ss.......",
+        "......kkk..kkk......",
+        "....................",
+      ],
+      backhand: [
+        "........cccc........",
+        ".......cccccc.......",
+        "......cccccccc...rr.",
+        ".......sessse...rnnr",
+        "........ssss....rnnr",
+        ".........ss.....rnnr",
+        "......tttttttt...rr.",
+        ".....tttttttttt..r..",
+        ".....sttttttttsss...",
+        ".....s.tttttt.......",
+        ".....s.tttttt.......",
+        ".......tttttt.......",
+        ".......pppppp.......",
+        ".......pppppp.......",
+        ".......pp..pp.......",
+        ".......ss..ss.......",
+        ".......ss..ss.......",
+        ".......ss..ss.......",
+        "......kkk..kkk......",
+        "....................",
+      ],
+      won: [
+        "...y....cccc........",
+        "..y....cccccc.......",
+        "......cccccccc......",
+        ".y.....sessse.......",
+        "....ss..ssss........",
+        ".....s...ss.........",
+        ".....stttttttt......",
+        ".....sttttttttt.....",
+        "......ttttttttts....",
+        ".......tttttt.s.....",
+        ".......tttttt.s.....",
+        ".......tttttt.r.....",
+        ".......pppppp.r.....",
+        ".......pppppp.rr....",
+        ".......pp..pprnnr...",
+        ".......ss..ssrnnr...",
+        ".......ss..ssrnnr...",
+        ".......ss..ss.rr....",
+        "......kkk..kkk......",
+        "....................",
+      ],
+    },
+  },
+};
+// Turn each grid into a list of same-color runs, so drawing is quick.
+function spriteRuns(grid, palette) {
+  const runs = [];
+  grid.forEach((row, y) => {
+    if (row.length !== 20) throw new Error("Sprite row " + y + " is not 20 letters: " + row);
+    let x = 0;
+    while (x < row.length) {
+      const ch = row[x];
+      if (ch === ".") { x += 1; continue; }
+      if (!palette[ch]) throw new Error("Sprite letter has no color: " + ch);
+      let len = 1;
+      while (row[x + len] === ch) len += 1;
+      runs.push({ x, y, len, color: palette[ch] });
+      x += len;
+    }
+  });
+  return runs;
+}
+for (const who of Object.keys(SPRITES)) {
+  const s = SPRITES[who];
+  s.runs = {};
+  for (const pose of Object.keys(s.poses)) s.runs[pose] = spriteRuns(s.poses[pose], s.palette);
+}
+
+// What is on screen right now (only used for drawing).
+const view = {
+  ballPos: null,       // {x, y, h}  h = height for the ball's size
+  incomingPath: null,  // {from, land, contact}
+  myPath: null,        // {from, to, miss}
+  oppPath: null,       // {from, to}
+  oppPos: { ...GAME_SPEC.serverSpot },
+  playerSpot: GAME_SPEC.playerSpots.return,
+  playerPos: { ...GAME_SPEC.playerSpots.return }, // where your sprite is drawn right now
+  myPose: "ready",     // which picture of you: ready, forehand, backhand, won
+  oppPose: "ready",    // same for them
+  fadeIncoming: false, // true after you answer
+  clueCard: null,      // the clue words beside the paused ball, or null
+  resultLabel: null,   // {at, text, kind}: "You won it" or "They won it" where a point-ending ball ended up
+  secondBounce: null,  // on a short ball you didn't move in for: where it bounced the second time
+  flash: null,         // {x, y, t, color} a little burst
+  anim: null,          // the animation that is playing
+};
+
+// --- Seeing the court from behind your baseline ---
+// The camera stands CAMERA_BACK feet behind your baseline. Things farther away
+// look smaller and closer together, so the court is wide at the bottom and
+// narrow at the top. That lets it fill the phone's width.
+const VIEW = { left: -19.5, right: 19.5, near: -8, far: 86, cameraBack: -150, padTop: 22, padBottom: 6 };
+let kx = 1, ky = 1, cx = 0, top0 = 0, uFar = 0;
+
+function depthFactor(y) { return 1 / (y - VIEW.cameraBack); }
+
+function resizeCanvas() {
+  const r = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.max(1, Math.round(r.width * dpr));
+  canvas.height = Math.max(1, Math.round(r.height * dpr));
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const uNear = depthFactor(VIEW.near);
+  uFar = depthFactor(VIEW.far);
+  kx = (r.width / 2) / (VIEW.right * uNear);
+  // Don't stretch the court taller than looks natural on a tall screen.
+  const room = r.height - VIEW.padTop - VIEW.padBottom;
+  const usable = Math.min(room, r.width * 1.35);
+  ky = usable / (uNear - uFar);
+  cx = r.width / 2;
+  top0 = VIEW.padTop + (room - usable) / 2;
+}
+// Turn a spot on the court (feet) into a spot on the screen (pixels).
+function proj(p) {
+  const u = depthFactor(p.y);
+  return { x: cx + p.x * kx * u, y: top0 + (u - uFar) * ky };
+}
+// How many pixels one foot is at this depth.
+function ftPx(y) { return kx * depthFactor(y); }
+
+function poly(points, fill) {
+  ctx.beginPath();
+  points.forEach((p, i) => { const q = proj(p); if (i) ctx.lineTo(q.x, q.y); else ctx.moveTo(q.x, q.y); });
+  ctx.closePath(); ctx.fillStyle = fill; ctx.fill();
+}
+function seg(a, b) {
+  const p = proj(a), q = proj(b);
+  ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke();
+}
+
+function drawCourt() {
+  const C = GAME_SPEC.court;
+  const r = canvas.getBoundingClientRect();
+  ctx.clearRect(0, 0, r.width, r.height);
+  const D = C.doublesHalfWidth, S = C.singlesHalfWidth, L = C.length;
+  // Surround
+  poly([{ x: -40, y: VIEW.near - 4 }, { x: 40, y: VIEW.near - 4 }, { x: 40, y: VIEW.far + 2 }, { x: -40, y: VIEW.far + 2 }], "#2f6b47");
+  // Court surface, then the alleys a little darker (they count as out)
+  poly([{ x: -D, y: 0 }, { x: D, y: 0 }, { x: D, y: L }, { x: -D, y: L }], "#2d5f9a");
+  poly([{ x: -D, y: 0 }, { x: -S, y: 0 }, { x: -S, y: L }, { x: -D, y: L }], "rgba(0,0,0,0.2)");
+  poly([{ x: S, y: 0 }, { x: D, y: 0 }, { x: D, y: L }, { x: S, y: L }], "rgba(0,0,0,0.2)");
+
+  ctx.strokeStyle = "rgba(255,255,255,0.92)";
+  ctx.lineWidth = 1.5;
+  const line = (x1, y1, x2, y2) => seg({ x: x1, y: y1 }, { x: x2, y: y2 });
+  line(-D, 0, D, 0); line(-D, L, D, L); line(-D, 0, -D, L); line(D, 0, D, L);
+  line(-S, 0, -S, L); line(S, 0, S, L);
+  const s1 = C.net - C.serviceLineFromNet, s2 = C.net + C.serviceLineFromNet;
+  line(-S, s1, S, s1); line(-S, s2, S, s2); line(0, s1, 0, s2);
+  line(0, 0, 0, 1); line(0, L, 0, L - 1);
+  // Net: a white band with a little height
+  const a = proj({ x: -D - 1, y: C.net }), b = proj({ x: D + 1, y: C.net });
+  const netH = C.netHeight * ftPx(C.net) * 0.8;
+  ctx.fillStyle = "rgba(20,20,20,0.45)";
+  ctx.fillRect(a.x, a.y - netH, b.x - a.x, netH);
+  ctx.strokeStyle = "#f0f0f0"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(a.x, a.y - netH); ctx.lineTo(b.x, b.y - netH); ctx.stroke();
+}
+
+// A player: a pixel sprite standing on the court at p (its feet are at p).
+// Squares snap to screen pixels so the edges stay crisp.
+function drawSprite(p, who, pose) {
+  const sp = SPRITES[who];
+  const runs = sp.runs[pose] || sp.runs.ready;
+  const q = proj(p);
+  const dpr = window.devicePixelRatio || 1;
+  const snap = (v) => Math.round(v * dpr) / dpr;
+  const cell = Math.max(1 / dpr, snap(ftPx(p.y) * SPRITE_FEET / 20));
+  // Shadow on the ground under the feet
+  ctx.fillStyle = "rgba(0,0,0,0.3)";
+  ctx.beginPath(); ctx.ellipse(q.x, q.y + cell * 0.5, cell * 4.5, cell * 1.3, 0, 0, Math.PI * 2); ctx.fill();
+  const x0 = snap(q.x - cell * 10), y0 = snap(q.y - cell * 18.5);
+  for (const run of runs) {
+    ctx.fillStyle = run.color;
+    ctx.fillRect(x0 + run.x * cell, y0 + run.y * cell, run.len * cell, cell);
+  }
+}
+
+function arrowHead(from, to, color) {
+  const p = proj(from), q = proj(to);
+  const a = Math.atan2(q.y - p.y, q.x - p.x);
+  const L = 9;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(q.x, q.y);
+  ctx.lineTo(q.x - L * Math.cos(a - 0.45), q.y - L * Math.sin(a - 0.45));
+  ctx.lineTo(q.x - L * Math.cos(a + 0.45), q.y - L * Math.sin(a + 0.45));
+  ctx.closePath(); ctx.fill();
+}
+
+// An X lying flat on the court.
+function drawX(p, color) {
+  const s = Math.max(5, ftPx(p.y) * 1.3), q = proj(p);
+  ctx.strokeStyle = color; ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(q.x - s, q.y - s * 0.55); ctx.lineTo(q.x + s, q.y + s * 0.55);
+  ctx.moveTo(q.x + s, q.y - s * 0.55); ctx.lineTo(q.x - s, q.y + s * 0.55);
+  ctx.stroke();
+}
+
+function drawIncomingPath(p) {
+  const ball = "#e6f53a";
+  ctx.strokeStyle = ball; ctx.lineWidth = 2.5;
+  ctx.setLineDash([6, 5]);
+  seg(p.from, p.land);
+  // After the bounce: a short, lighter stub that only shows the direction.
+  // It's the same length on every ball, so it doesn't tell you how far the ball carries.
+  const dx = p.contact.x - p.land.x, dy = p.contact.y - p.land.y, len = Math.hypot(dx, dy) || 1;
+  const stub = { x: p.land.x + dx / len * GAME_SPEC.afterBounceStubFeet, y: p.land.y + dy / len * GAME_SPEC.afterBounceStubFeet };
+  ctx.strokeStyle = "rgba(230,245,58,0.55)";
+  ctx.setLineDash([3, 4]);
+  seg(p.land, stub);
+  ctx.setLineDash([]);
+  arrowHead(p.land, stub, "rgba(230,245,58,0.8)");
+  // Landing spot: a flat ring and an X
+  const q = proj(p.land), R = Math.max(9, ftPx(p.land.y) * 2.4);
+  ctx.strokeStyle = ball; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.ellipse(q.x, q.y, R, R * 0.55, 0, 0, Math.PI * 2); ctx.stroke();
+  drawX(p.land, ball);
+}
+
+function drawMyPath(p) {
+  const c = p.miss ? "#ff7a6b" : "#7fd3ff";
+  ctx.strokeStyle = c; ctx.lineWidth = 2.5;
+  seg(p.from, p.to);
+  arrowHead(p.from, p.to, c);
+  if (p.miss) drawX(p.to, c);
+}
+
+function drawOppPath(p) {
+  const c = p.color || "#e6f53a";
+  ctx.strokeStyle = c; ctx.lineWidth = 2.5; ctx.setLineDash([6, 5]);
+  seg(p.from, p.to);
+  ctx.setLineDash([]);
+  arrowHead(p.from, p.to, c);
+  if (p.miss) drawX(p.to, c);
+}
+
+function drawBall(b) {
+  if (!b) return;
+  const h = b.h || 0, q = proj(b), f = ftPx(b.y);
+  const r = Math.max(3, f * 0.9);
+  // Shadow on the ground, ball raised by its height
+  ctx.fillStyle = "rgba(0,0,0,0.35)";
+  ctx.beginPath(); ctx.ellipse(q.x, q.y, r, r * 0.5, 0, 0, Math.PI * 2); ctx.fill();
+  const lift = h * f * 0.8;
+  ctx.fillStyle = "#e6f53a";
+  ctx.beginPath(); ctx.arc(q.x, q.y - lift, r * 1.15, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = "rgba(255,255,255,0.8)"; ctx.lineWidth = 1; ctx.stroke();
+}
+
+function drawFlash(f) {
+  if (!f) return;
+  const k = f.t; // 0 to 1
+  const q = proj(f), base = Math.max(8, ftPx(f.y) * 2);
+  const R = base + k * base * 2.5;
+  ctx.strokeStyle = f.color;
+  ctx.globalAlpha = 1 - k;
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.ellipse(q.x, q.y, R, R * 0.55, 0, 0, Math.PI * 2); ctx.stroke();
+  for (let i = 0; i < 8; i++) {
+    const a = i / 8 * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(q.x + Math.cos(a) * R * 0.6, q.y + Math.sin(a) * R * 0.33);
+    ctx.lineTo(q.x + Math.cos(a) * R * 1.1, q.y + Math.sin(a) * R * 0.6);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+
+// Where the ball is drawn on screen (raised by its height).
+function ballScreen(b) {
+  const q = proj(b), f = ftPx(b.y);
+  return { x: q.x, y: q.y - (b.h || 0) * f * 0.8, r: Math.max(3, f * 0.9) * 1.15 };
+}
+
+// The clue card: a small card right beside the paused ball, on the side that
+// faces the middle of the court. If it would cover the ball's path, it moves
+// up, then down, then to the other side.
+function drawClueCard(lines, ball, path) {
+  if (!lines || !ball) return;
+  const b = ballScreen(ball);
+  ctx.font = "800 13px sans-serif";
+  const padX = 8, padY = 6, lineH = 16, gap = 5;
+  const w = Math.ceil(Math.max(...lines.map(t => ctx.measureText(t).width))) + padX * 2;
+  const h = lines.length * lineH + padY * 2;
+  const r = canvas.getBoundingClientRect();
+  const prefer = ball.x >= 0 ? -1 : 1; // -1 = card on the left of the ball
+  const spots = [[prefer, 0], [prefer, -(h / 2 + 8)], [prefer, h / 2 + 8], [-prefer, 0]];
+  const boxAt = ([side, dy]) => {
+    let x = side < 0 ? b.x - b.r - gap - w : b.x + b.r + gap;
+    let y = b.y - h / 2 + dy;
+    x = Math.min(Math.max(2, x), r.width - w - 2);
+    y = Math.min(Math.max(2, y), r.height - h - 2);
+    return { x, y };
+  };
+  // Does the dashed path pass through this box?
+  const covers = (box) => {
+    if (!path) return false;
+    const pts = [[path.from, path.land], [path.land, path.contact]];
+    for (const [a0, a1] of pts) {
+      const p0 = proj(a0), p1 = proj(a1);
+      for (let i = 0; i <= 40; i++) {
+        const t = i / 40, x = p0.x + (p1.x - p0.x) * t, y = p0.y + (p1.y - p0.y) * t;
+        if (x > box.x - 2 && x < box.x + w + 2 && y > box.y - 2 && y < box.y + h + 2) return true;
+      }
+    }
+    return false;
+  };
+  let box = boxAt(spots[0]);
+  for (const s of spots) { const c = boxAt(s); if (!covers(c)) { box = c; break; } }
+  // Card
+  ctx.fillStyle = "rgba(12,28,18,0.88)";
+  ctx.strokeStyle = "rgba(255,255,255,0.35)";
+  ctx.lineWidth = 1;
+  const rr = 7;
+  ctx.beginPath();
+  ctx.moveTo(box.x + rr, box.y);
+  ctx.arcTo(box.x + w, box.y, box.x + w, box.y + h, rr);
+  ctx.arcTo(box.x + w, box.y + h, box.x, box.y + h, rr);
+  ctx.arcTo(box.x, box.y + h, box.x, box.y, rr);
+  ctx.arcTo(box.x, box.y, box.x + w, box.y, rr);
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#f3f6ef";
+  ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  lines.forEach((t, i) => ctx.fillText(t, box.x + padX, box.y + padY + lineH * i + lineH / 2));
+  ctx.textBaseline = "alphabetic";
+  view.cardBox = { ...box, w, h }; // kept only so tests can check where it went
+}
+
+// The result label: a small word on the court where the point ended
+// (red when the point went to them, green when it went to you).
+function drawResultLabel(lab) {
+  if (!lab) return;
+  const q = proj(lab.at), r = canvas.getBoundingClientRect();
+  ctx.font = "800 14px sans-serif";
+  const w = Math.ceil(ctx.measureText(lab.text).width) + 16, h = 24;
+  let x = q.x - w / 2, y = lab.below ? q.y + 14 : q.y - h - 12; // just above the spot (or below)
+  if (y < 2) y = q.y + 12;               // no room above: put it below
+  x = Math.min(Math.max(2, x), r.width - w - 2);
+  y = Math.min(Math.max(2, y), r.height - h - 2);
+  const color = lab.kind === "good" ? "#5fd17a" : "#ff7a6b";
+  ctx.fillStyle = "rgba(12,28,18,0.9)";
+  ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+  const rr = 7;
+  ctx.beginPath();
+  ctx.moveTo(x + rr, y); ctx.arcTo(x + w, y, x + w, y + h, rr); ctx.arcTo(x + w, y + h, x, y + h, rr);
+  ctx.arcTo(x, y + h, x, y, rr); ctx.arcTo(x, y, x + w, y, rr); ctx.closePath();
+  ctx.fill(); ctx.stroke();
+  ctx.fillStyle = color; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText(lab.text, x + w / 2, y + h / 2 + 1);
+  ctx.textBaseline = "alphabetic";
+  view.labelBox = { x, y, w, h }; // kept only so tests can check where it went
+}
+
+// The second bounce on a short ball you didn't move in for: the same ring and X
+// as the first bounce, at full strength, so you can see it bounced twice.
+function drawSecondBounce(p) {
+  if (!p) return;
+  const ball = "#e6f53a";
+  const q = proj(p), R = Math.max(9, ftPx(p.y) * 2.4);
+  ctx.strokeStyle = ball; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.ellipse(q.x, q.y, R, R * 0.55, 0, 0, Math.PI * 2); ctx.stroke();
+  drawX(p, ball);
+}
+
+function draw() {
+  drawCourt();
+  if (view.incomingPath) {
+    // After you answer, their ball's path fades so your shot stands out.
+    ctx.globalAlpha = view.fadeIncoming ? 0.35 : 1;
+    drawIncomingPath(view.incomingPath);
+    ctx.globalAlpha = 1;
+  }
+  drawSecondBounce(view.secondBounce);
+  if (view.myPath) drawMyPath(view.myPath);
+  if (view.oppPath) drawOppPath(view.oppPath);
+  drawSprite(view.oppPos, "them", view.oppPose);
+  drawSprite(view.playerPos, "me", view.myPose);
+  drawBall(view.ballPos);
+  drawFlash(view.flash);
+  drawClueCard(view.clueCard, view.ballPos, view.incomingPath);
+  drawResultLabel(view.resultLabel);
+}
+
+// --- Animation: moves the ball along a list of legs, then calls done() ---
+// Each leg: { from, to, dur, arc, opp:{from,to}, onStart, onEnd }
+function playLegs(legs, done) {
+  view.anim = { legs, i: 0, t: 0, done };
+  startLeg();
+}
+function startLeg() {
+  const a = view.anim;
+  const leg = a.legs[a.i];
+  if (leg && leg.onStart) leg.onStart();
+}
+function stepAnim(dt) {
+  const a = view.anim;
+  if (!a) return;
+  const leg = a.legs[a.i];
+  const speed = reduceMotion ? 2 : 1;
+  a.t += dt * speed / leg.dur;
+  const k = Math.min(1, a.t);
+  const e = k; // steady speed reads best for a ball
+  view.ballPos = {
+    x: leg.from.x + (leg.to.x - leg.from.x) * e,
+    y: leg.from.y + (leg.to.y - leg.from.y) * e,
+    h: (leg.arc || 0) * 4 * e * (1 - e) + (leg.h0 || 0) * (1 - e) + (leg.h1 || 0) * e,
+  };
+  if (leg.opp) {
+    const ee = 1 - Math.pow(1 - k, 2);
+    view.oppPos = { x: leg.opp.from.x + (leg.opp.to.x - leg.opp.from.x) * ee, y: leg.opp.from.y + (leg.opp.to.y - leg.opp.from.y) * ee };
+  }
+  if (leg.me) {
+    const ee = 1 - Math.pow(1 - k, 2);
+    view.playerPos = { x: leg.me.from.x + (leg.me.to.x - leg.me.from.x) * ee, y: leg.me.from.y + (leg.me.to.y - leg.me.from.y) * ee };
+  }
+  if (k >= 1) {
+    if (leg.onEnd) leg.onEnd();
+    a.i += 1; a.t = 0;
+    if (a.i >= a.legs.length) { view.anim = null; if (a.done) a.done(); }
+    else startLeg();
+  }
+}
+function stepFlash(dt) {
+  if (!view.flash) return;
+  view.flash.t += dt / 0.6;
+  if (view.flash.t >= 1) view.flash = null;
+}
+function burst(p, color) { if (!reduceMotion) view.flash = { x: p.x, y: p.y, t: 0, color }; }
+
+
+/* =========================================================
+   5. INPUT: taps and clicks. Phone only: no keyboard keys and no sound (the user asked).
+   ========================================================= */
+const el = (id) => document.getElementById(id);
+
+el("againBtn").addEventListener("click", () => { startGame(); });
+el("pauseBtn").addEventListener("click", togglePause);
+el("resumeBtn").addEventListener("click", togglePause);
+
+window.addEventListener("resize", () => { resizeCanvas(); draw(); });
+
+
+/* =========================================================
+   6. SCREENS: start, play, end, and the turn flow.
+   ========================================================= */
+function showScreen(name) {
+  state.screen = name;
+  for (const id of ["play", "end"]) el(id).classList.toggle("active", id === name);
+  if (name === "play") { resizeCanvas(); draw(); }
+}
+
+function startGame() {
+  state.me = 0; state.them = 0;
+  state.pointNo = 1; state.ballNo = 1;
+  state.turns = []; state.gameOver = false;
+  state.paused = false;
+  el("pauseOverlay").classList.remove("show");
+  showScreen("play");
+  updateScoreboard();
+  startPoint();
+}
+
+// Show the score. The side that just won a point gets a quick bump.
+function renderScore(justWon) {
+  const w = scoreWords(state.me, state.them);
+  el("scoreThem").textContent = w.them;
+  el("scoreMe").textContent = w.me;
+  const who = justWon === "me" ? "scoreMe" : justWon === "them" ? "scoreThem" : null;
+  if (who && !reduceMotion) { const b = el(who); b.classList.remove("bump"); void b.offsetWidth; b.classList.add("bump"); }
+}
+
+function updateScoreboard() {
+  renderScore();
+}
+
+// A new point: the opponent serves.
+function startPoint() {
+  state.ballNo = 1;
+  const side = serveSide(state.me, state.them);
+  view.oppPos = sideSpot(GAME_SPEC.serverSpot, side);
+  startBall(makeServe(side));
+}
+
+// The opponent hits a ball. It flies, then pauses before reaching the player.
+function startBall(ball) {
+  state.ball = ball;
+  state.answers = {};
+  state.qIndex = 0;
+  state.timeLeft = GAME_SPEC.timeLimit;
+  state.phase = "incoming";
+  updateScoreboard();
+  setTimerDisplay();
+  view.resultLabel = null;
+  view.secondBounce = null;
+  view.clueCard = null;
+  renderPanel();
+  view.myPath = null; view.oppPath = null;
+  view.incomingPath = null;
+  view.fadeIncoming = false;
+  view.playerSpot = ball.spot;
+  // You stand ready. They swing as the ball leaves: a forehand from your left
+  // side of the court (their right), a backhand from your right.
+  view.myPose = "ready";
+  view.oppPose = view.oppPos.x <= 0 ? "forehand" : "backhand";
+  const playerFrom = { ...view.playerPos }; // where you were after the last ball
+  // The ball pauses 80% of the way to its bounce.
+  const pause = { x: ball.from.x + (ball.land.x - ball.from.x) * 0.8, y: ball.from.y + (ball.land.y - ball.from.y) * 0.8 };
+  ball.pausePoint = pause;
+  const arc = ball.pace === "fast" ? 3 : ball.pace === "slow" ? 9 : 6;
+  // While their ball flies in, you glide back to your spot (center, or the return spot on a serve).
+  playLegs([{ from: ball.from, to: pause, dur: GAME_SPEC.timing.incoming, arc: arc * 0.9,
+              me: { from: playerFrom, to: { ...ball.spot } } }], () => {
+    if (state.screen !== "play") return;
+    view.oppPose = "ready";
+    showClues(ball);
+  });
+}
+
+// The ball is paused: show the clue tags and the path, start the timer.
+function showClues(ball) {
+  view.clueCard = clueTags(ball);
+  view.incomingPath = { from: ball.from, land: ball.land, contact: ball.contact };
+  state.phase = "choose";
+  renderPanel();
+}
+
+// ---- The panel: one fixed-size box that shows one of two things ----
+// 1. A question (while the ball comes and while you choose)
+// 2. The summary of your answers (after the ball)
+function renderPanel() {
+  if (state.phase === "feedback") renderSummary(state.lastTurn);
+  else renderQuestion();
+}
+
+function renderQuestion() {
+  const Q = GAME_SPEC.questions;
+  const qi = Math.min(state.qIndex, Q.length - 1);
+  const q = Q[qi];
+  const canTap = state.phase === "choose" && !state.paused;
+  const picked = Q.slice(0, qi).map(x => state.answers[x.id]).filter(Boolean).join(" · ");
+  const dots = Q.map((x, i) => `<i class="${i <= qi ? "on" : ""}"></i>`).join("");
+  el("panel").innerHTML = `
+    <div class="panel-head">
+      <span class="panel-title">${q.label.replace(/^\d\.\s*/, "")}</span>
+      <span class="dots" aria-label="Question ${qi + 1} of ${Q.length}">${dots}</span>
+      <span class="panel-sub">${picked}</span>
+    </div>
+    <div class="opts n${q.options.length} q-${q.id}">
+      ${q.options.map(o => `<button class="opt${state.answers[q.id] === o ? " chosen" : ""}" data-opt="${o}"${canTap ? "" : " disabled"}>${o}</button>`).join("")}
+    </div>`;
+  el("panel").querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => chooseOption(qi, b.dataset.opt)));
+}
+
+function chooseOption(qi, option) {
+  if (state.phase !== "choose" || state.paused || qi !== state.qIndex) return;
+  const q = GAME_SPEC.questions[qi];
+  state.answers[q.id] = option;
+  state.qIndex += 1;
+  if (state.qIndex >= GAME_SPEC.questions.length) { submitTurn(false); return; }
+  renderPanel();
+}
+
+// The mark that leads each summary row: a symbol in a small colored circle.
+// The symbol (not just the color) tells you the result.
+function symbolHTML(mark) {
+  const icon = d => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}"/></svg>`;
+  const sym = {
+    best: icon("M5 12.5l4.5 4.5L19 7.5"),
+    okay: icon("M6 12h12"),
+    wrong: icon("M6.5 6.5l11 11M17.5 6.5l-11 11"),
+    skip: icon("M11.9 12h0.2"),   // a small dot: not graded
+  }[mark];
+  const name = { best: "Best", okay: "Okay", wrong: "Wrong", skip: "Not graded" }[mark];
+  return `<span class="sym ${mark}" role="img" aria-label="${name}">${sym}</span>`;
+}
+
+function nextLabel() {
+  const r = state.lastTurn.result;
+  return (state.gameOver ? "See results" : r.pointTo ? "Next point" : "Next ball") + " →";
+}
+
+// The best answers as short names for the "Best:" line. When both corners
+// are best (you hit from the middle), they become one ("either corner").
+function bestList(m) {
+  const S = GAME_SPEC, corners = Object.keys(S.corners);
+  const either = m.names && m.names.either && corners.every(c => m.best.includes(c));
+  const list = [];
+  for (const b of m.best) {
+    if (either && corners.includes(b)) { if (b === corners[0]) list.push(m.names.either); continue; }
+    list.push((m.names && m.names[b]) || S.bestNames[b] || b);
+  }
+  return list;
+}
+
+function renderSummary(turn) {
+  const S = GAME_SPEC;
+  // A best answer is one line. A wrong or okay answer adds a second line
+  // with the best answer and a short reason.
+  const rows = turn.marks.map(m => {
+    const skip = m.mark === "skip";
+    const second = m.mark === "best" || skip ? "" :
+      `<span class="best2"><b>Best: ${bestList(m).join(" or ")}</b> · ${m.short}</span>`;
+    return `
+    <div class="row${second ? " two" : ""}">
+      <span class="row-main">
+        ${symbolHTML(m.mark)}
+        <span class="what">${m.label} <span>· ${skip ? S.text.didntReach : (m.answer || S.text.noAnswer)}</span></span>
+      </span>
+      ${second}
+    </div>`;
+  }).join("");
+  el("panel").innerHTML = `
+    <div class="rows">${rows}</div>
+    <button class="next-btn" id="nextBtn">${nextLabel()}</button>`;
+  el("nextBtn").addEventListener("click", nextAfterFeedback);
+}
+
+// The answer is in (or time ran out). Judge it, roll the outcome, play it out.
+function submitTurn(timedOut) {
+  state.phase = "resolve";
+  view.fadeIncoming = true;
+  view.clueCard = null;
+  renderPanel();
+  setTimerDisplay();
+  const ball = state.ball;
+  const judged = judgeTurn(ball, state.answers);
+  const result = resolveTurn(ball, judged, timedOut);
+  // You never reached the ball, so you never used your Stroke or Shot: don't
+  // grade them. (On a wide ball the wrong stroke is why you missed, so the
+  // Stroke keeps its grade.)
+  if (result.outcome === "cantReach") for (const m of judged.marks) {
+    if (m.q === "shot" || (m.q === "stroke" && result.reason !== "wideWrongStroke")) m.mark = "skip";
+  }
+  const turn = { point: state.pointNo, ball: state.ballNo, isServe: ball.isServe, timedOut, ...judged, result };
+  state.turns.push(turn);
+  state.lastTurn = turn;
+  const T = GAME_SPEC.timing;
+  const legs = [
+    { from: ball.pausePoint, to: ball.land, dur: T.finish * 0.5, arc: 0, h0: 1, h1: 0 },
+    { from: ball.land, to: ball.contact, dur: T.finish * 0.5, arc: 0, h0: 0,
+      h1: ball.bounce === "high" ? 5 : ball.bounce === "waist" ? 3 : 1.5 },
+  ];
+  const noHit = result.outcome === "timeout" || result.outcome === "cantReach";
+  if (result.outcome === "cantReach") {
+    // Your circle makes the move you picked while the ball goes by.
+    const steps = { "Step left": [-1, 0], "Step right": [1, 0], "Move in": [0, 1], "Move back": [0, -0.7], "Stay": [0, 0] };
+    let [sx, sy] = steps[state.answers.move] || [0, 0];
+    let f = GAME_SPEC.wrongStepShowFeet;
+    if (result.reason === "outOfReach") {
+      // You chase it, but it's too far: you get most of the way and it goes by.
+      sx = Math.sign(ball.cdx); sy = 0;
+      f = GAME_SPEC.reachFeet[ball.pace] * 0.75;
+    }
+    const start = { ...view.playerPos };
+    const end = { x: start.x + sx * f, y: start.y + sy * f };
+    legs[0].me = { from: start, to: { x: start.x + sx * f * 0.6, y: start.y + sy * f * 0.6 } };
+    legs[1].me = { from: legs[0].me.to, to: end };
+  }
+  if (!noHit) {
+    // You run to the ball while it bounces: stand beside it, on the side you hit from.
+    const side = ball.side === "forehand" ? -1 : 1;
+    const hitSpot = { x: ball.contact.x + side * GAME_SPEC.hitStandSide, y: ball.contact.y - GAME_SPEC.hitStandBehind };
+    const start = { ...view.playerPos };
+    const mid = { x: (start.x + hitSpot.x) / 2, y: (start.y + hitSpot.y) / 2 };
+    legs[0].me = { from: start, to: mid };
+    legs[1].me = { from: mid, to: hitSpot };
+    result.hitSpot = hitSpot;
+  }
+  if (result.reason === "twoBounces") {
+    // A short ball you didn't move in for: it hops once more in front of you and dies.
+    legs[1] = { ...legs[1], to: result.pastEnd, arc: 1.5, h1: 0,
+      onEnd: () => { view.secondBounce = { ...result.pastEnd }; burst(result.pastEnd, "#ff7a6b"); } };
+    playLegs(legs, () => finishTurn(turn));
+    return;
+  }
+  if (noHit) {
+    // No swing: the ball keeps going on its line, past you.
+    legs.push({ from: ball.contact, to: result.pastEnd, dur: T.finish, arc: 0, h0: legs[1].h1, h1: 0.5,
+      onEnd: () => burst(result.pastEnd, "#ff7a6b") });
+    playLegs(legs, () => finishTurn(turn));
+    return;
+  }
+  const shot = GAME_SPEC.shots[result.shotKind];
+  const myLeg = {
+    from: ball.contact, to: result.playerEnd, dur: T.shot * (result.shotName === "Lob" ? 1.4 : 1),
+    arc: shot.arc, h0: 3,
+    onStart: () => {
+      view.myPath = { from: ball.contact, to: result.playerEnd, miss: result.outcome === "playerMiss" };
+      // Swing with the stroke you picked (running around a backhand is a forehand).
+      view.myPose = state.answers.stroke === "Backhand" ? "backhand" : "forehand";
+    },
+    onEnd: () => {
+      if (result.outcome === "playerMiss") burst(result.playerEnd, "#ff7a6b");
+    },
+  };
+  const oppFrom = { ...view.oppPos };
+  if (result.oppHit) myLeg.opp = { from: oppFrom, to: result.oppHit };
+  // You stay where you hit the ball until you press Next; then you glide back.
+  legs.push(myLeg);
+
+  if (result.outcome === "opponentMiss" || result.outcome === "opponentWinner") {
+    const isWinner = result.outcome === "opponentWinner";
+    const end = result.oppEnd;
+    legs.push({
+      from: result.oppHit, to: end, dur: T.finalBall, arc: isWinner ? 4 : 6,
+      onStart: () => {
+        view.oppPath = { from: result.oppHit, to: end, miss: !isWinner, color: isWinner ? "#e6f53a" : "#5fd17a" };
+        // They swing: a forehand if the ball is on their right (your left).
+        view.oppPose = result.oppHit.x <= oppFrom.x ? "forehand" : "backhand";
+      },
+      onEnd: () => {
+        if (isWinner) { burst(result.oppLand, "#ff7a6b"); }
+        else { burst(end, "#5fd17a"); }
+      },
+    });
+  }
+  playLegs(legs, () => finishTurn(turn));
+}
+
+// Where to label the court when a point ends, and who won it. No label while the rally goes on.
+// "bad" = the point went to them (red), "good" = the point went to you (green).
+function courtLabelFor(r) {
+  if (!r.pointTo) return null;
+  const L = GAME_SPEC.text.courtLabels;
+  const at = r.outcome === "playerMiss" ? r.playerEnd
+           : r.outcome === "opponentMiss" ? r.oppEnd
+           : r.outcome === "opponentWinner" ? r.oppLand
+           : r.pastEnd; // time-out or couldn't reach
+  // On two bounces, the label goes below the ball so both bounce rings stay visible.
+  const who = r.pointTo === "me" ? L.me : L.them;
+  const reason = r.outcome === "cantReach" && GAME_SPEC.text.cantReachWords[r.reason];
+  return { at, text: reason ? reason + " · " + who : who, kind: r.pointTo === "me" ? "good" : "bad",
+           below: r.reason === "twoBounces" };
+}
+
+// Update the score and show feedback.
+function finishTurn(turn) {
+  const r = turn.result;
+  if (r.pointTo === "me") state.me += 1;
+  if (r.pointTo === "them") state.them += 1;
+  const winner = gameWinner(state.me, state.them);
+  state.gameOver = !!winner;
+  renderScore(r.pointTo);
+  // Whoever won the point raises a fist.
+  if (r.pointTo === "me") view.myPose = "won";
+  if (r.pointTo === "them") view.oppPose = "won";
+  state.phase = "feedback";
+  setTimerDisplay();
+  view.resultLabel = courtLabelFor(turn.result);
+  renderPanel();
+}
+
+function nextAfterFeedback() {
+  if (state.phase !== "feedback" || state.paused) return;
+  const r = state.lastTurn.result;
+  if (state.gameOver) { showEnd(); return; }
+  if (r.pointTo) {
+    state.pointNo += 1;
+    startPoint();
+    return;
+  }
+  // The rally goes on: the opponent hits the next ball from where they ran to.
+  state.ballNo += 1;
+  view.oppPos = { ...r.oppHit };
+  startBall(makeRallyBall(r.nextType, r.oppHit, r.recoverSpot));
+}
+
+function showEnd() {
+  const S = GAME_SPEC;
+  const won = state.me > state.them;
+  state.phase = "idle";
+  el("endTitle").textContent = won ? S.text.winTitle : S.text.loseTitle;
+  el("endScore").textContent = `You ${state.me} · Them ${state.them}`;
+  // Report card: how many best answers you gave for each question.
+  el("endReport").innerHTML = reportCard(state.turns).map(r => `
+    <div class="report-row">
+      <span class="q">${r.label}</span>
+      <span class="bar"><i style="width:${r.total ? Math.round(r.best / r.total * 100) : 0}%"></i></span>
+      <span class="n">${r.best}/${r.total}</span>
+    </div>`).join("");
+  showScreen("end");
+}
+
+function togglePause() {
+  if (state.screen !== "play") return;
+  state.paused = !state.paused;
+  el("pauseOverlay").classList.toggle("show", state.paused);
+  el("pauseBtn").textContent = state.paused ? "▶" : "⏸";
+  if (state.phase !== "feedback") renderPanel();
+  if (state.paused) el("resumeBtn").focus();
+}
+
+function setTimerDisplay() {
+  const t = Math.max(0, state.timeLeft);
+  el("timerNum").textContent = Math.ceil(t) + "s";
+  el("timerNum").classList.toggle("low", t <= 3);
+  const idle = state.phase !== "choose";
+  el("timerNum").classList.toggle("idle", idle);
+}
+
+// --- No home screen: the game starts as soon as the page opens. ---
+// If the arcade's password screen is showing, wait until it's gone, so the
+// timer doesn't run while you're typing the password.
+function startWhenUnlocked() {
+  const root = document.documentElement;
+  if (!root.classList.contains("arcade-locked")) { startGame(); return; }
+  const watcher = new MutationObserver(() => {
+    if (!root.classList.contains("arcade-locked")) { watcher.disconnect(); startGame(); }
+  });
+  watcher.observe(root, { attributes: true, attributeFilter: ["class"] });
+}
+startWhenUnlocked();
+
+// --- The main loop: runs every frame ---
+let lastTime = performance.now();
+function loop(now) {
+  const dt = Math.max(0, Math.min(0.05, (now - lastTime) / 1000));
+  lastTime = now;
+  if (state.screen === "play" && !state.paused) {
+    stepAnim(dt);
+    stepFlash(dt);
+    if (state.phase === "choose") {
+      state.timeLeft -= dt;
+      setTimerDisplay();
+      if (state.timeLeft <= 0) submitTurn(true);
+    }
+    draw();
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

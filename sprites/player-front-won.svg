@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="100" height="100" shape-rendering="crispEdges" role="img" aria-label="Pixel tennis player, front view: Point won (fist up)">
+  <!-- Front-facing player sprite from the arcade. 20 by 20 squares. Scale it to any size that is a whole-number multiple of 20px for crisp squares. -->
+  <rect x="3" y="0" width="1" height="1" fill="#e6f53a"/>
+  <rect x="8" y="0" width="4" height="1" fill="#1a1a1a"/>
+  <rect x="2" y="1" width="1" height="1" fill="#e6f53a"/>
+  <rect x="7" y="1" width="6" height="1" fill="#1a1a1a"/>
+  <rect x="7" y="2" width="1" height="1" fill="#1a1a1a"/>
+  <rect x="8" y="2" width="4" height="1" fill="#a86b3c"/>
+  <rect x="12" y="2" width="1" height="1" fill="#1a1a1a"/>
+  <rect x="1" y="3" width="1" height="1" fill="#e6f53a"/>
+  <rect x="7" y="3" width="1" height="1" fill="#a86b3c"/>
+  <rect x="8" y="3" width="1" height="1" fill="#1a1a1a"/>
+  <rect x="9" y="3" width="2" height="1" fill="#a86b3c"/>
+  <rect x="11" y="3" width="1" height="1" fill="#1a1a1a"/>
+  <rect x="12" y="3" width="1" height="1" fill="#a86b3c"/>
+  <rect x="4" y="4" width="2" height="1" fill="#a86b3c"/>
+  <rect x="8" y="4" width="4" height="1" fill="#a86b3c"/>
+  <rect x="5" y="5" width="1" height="1" fill="#a86b3c"/>
+  <rect x="9" y="5" width="2" height="1" fill="#a86b3c"/>
+  <rect x="5" y="6" width="1" height="1" fill="#a86b3c"/>
+  <rect x="6" y="6" width="8" height="1" fill="#ffffff"/>
+  <rect x="5" y="7" width="1" height="1" fill="#a86b3c"/>
+  <rect x="6" y="7" width="9" height="1" fill="#ffffff"/>
+  <rect x="6" y="8" width="9" height="1" fill="#ffffff"/>
+  <rect x="7" y="9" width="6" height="1" fill="#ffffff"/>
+  <rect x="14" y="9" width="1" height="1" fill="#a86b3c"/>
+  <rect x="7" y="10" width="6" height="1" fill="#ffffff"/>
+  <rect x="14" y="10" width="1" height="1" fill="#a86b3c"/>
+  <rect x="7" y="11" width="6" height="1" fill="#ffffff"/>
+  <rect x="14" y="11" width="1" height="1" fill="#d9d9d9"/>
+  <rect x="7" y="12" width="6" height="1" fill="#6e1b2e"/>
+  <rect x="14" y="12" width="1" height="1" fill="#d9d9d9"/>
+  <rect x="7" y="13" width="6" height="1" fill="#6e1b2e"/>
+  <rect x="14" y="13" width="2" height="1" fill="#d9d9d9"/>
+  <rect x="7" y="14" width="2" height="1" fill="#6e1b2e"/>
+  <rect x="11" y="14" width="2" height="1" fill="#6e1b2e"/>
+  <rect x="13" y="14" width="1" height="1" fill="#d9d9d9"/>
+  <rect x="14" y="14" width="2" height="1" fill="#cfe9ff" fill-opacity="0.5"/>
+  <rect x="16" y="14" width="1" height="1" fill="#d9d9d9"/>
+  <rect x="7" y="15" width="2" height="1" fill="#a86b3c"/>
+  <rect x="11" y="15" width="2" height="1" fill="#a86b3c"/>
+  <rect x="13" y="15" width="1" height="1" fill="#d9d9d9"/>
+  <rect x="14" y="15" width="2" height="1" fill="#cfe9ff" fill-opacity="0.5"/>
+  <rect x="16" y="15" width="1" height="1" fill="#d9d9d9"/>
+  <rect x="7" y="16" width="2" height="1" fill="#a86b3c"/>
+  <rect x="11" y="16" width="2" height="1" fill="#a86b3c"/>
+  <rect x="13" y="16" width="1" height="1" fill="#d9d9d9"/>
+  <rect x="14" y="16" width="2" height="1" fill="#cfe9ff" fill-opacity="0.5"/>
+  <rect x="16" y="16" width="1" height="1" fill="#d9d9d9"/>
+  <rect x="7" y="17" width="2" height="1" fill="#a86b3c"/>
+  <rect x="11" y="17" width="2" height="1" fill="#a86b3c"/>
+  <rect x="14" y="17" width="2" height="1" fill="#d9d9d9"/>
+  <rect x="6" y="18" width="3" height="1" fill="#222222"/>
+  <rect x="11" y="18" width="3" height="1" fill="#222222"/>
+</svg>

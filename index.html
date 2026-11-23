@@ -1,0 +1,206 @@
+---
+# This front matter (the block between the dashes) tells GitHub Pages to fill
+# in the game list below every time someone adds a new game folder.
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Game Arcade</title>
+  <!-- This line keeps search engines from listing the site. -->
+  <meta name="robots" content="noindex">
+  <!-- This line colors the phone's browser bar to match the page. -->
+  <meta name="theme-color" content="#14123A">
+  <!-- This line loads the password screen from gate.js. -->
+  <script src="gate.js"></script>
+  <style>
+    /* The two fonts live in the fonts folder, so the page loads nothing from the internet. */
+    @font-face {
+      font-family: "Press Start 2P";
+      src: url("fonts/press-start-2p.woff2") format("woff2");
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Nunito";
+      src: url("fonts/nunito.woff2") format("woff2");
+      font-weight: 200 1000;
+      font-display: swap;
+    }
+
+    /* Night arcade colors. The page stays dark in light mode and dark mode. */
+    :root {
+      color-scheme: dark;
+      --bg: #14123A;
+      --text: #ffffff;
+      --muted: #b9b4e8;
+      --pink: #FF3CAC;
+      --cyan: #00E5FF;
+      --lime: #B6FF3B;
+      --violet: #8B5CF6;
+      --pixel: "Press Start 2P", ui-monospace, monospace;
+      --soft: "Nunito", system-ui, -apple-system, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { background: var(--bg); }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--soft);
+      color: var(--text);
+      background: var(--bg);
+    }
+    main {
+      max-width: 880px;
+      margin: 0 auto;
+      /* The env() parts keep content clear of a phone's notch and home bar. */
+      padding:
+        calc(40px + env(safe-area-inset-top))
+        calc(16px + env(safe-area-inset-right))
+        calc(40px + env(safe-area-inset-bottom))
+        calc(16px + env(safe-area-inset-left));
+    }
+    h1 {
+      font-family: var(--pixel);
+      font-weight: 400;
+      font-size: clamp(1.25rem, 6vw, 2.25rem);
+      line-height: 1.4;
+      text-align: left;
+      margin: 0;
+      text-shadow: 3px 3px 0 var(--pink);
+    }
+    /* The title and the cheering player sit side by side. */
+    .hero {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin: 0 0 36px;
+    }
+    /* The player sprite comes from the shared sprites folder. Its width is a
+       multiple of 20 so each square lands on whole pixels and stays crisp. */
+    .mascot {
+      width: 80px;
+      height: 80px;
+      image-rendering: pixelated;
+      flex: none;
+    }
+    @media (min-width: 600px) {
+      .mascot { width: 120px; height: 120px; }
+    }
+
+    .games {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 18px 14px;
+    }
+
+    /* Each tile is a sticker: a bright color and a slight tilt. */
+    .games a {
+      --tilt: -3deg;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 160px;
+      padding: 18px 12px;
+      border-radius: 18px;
+      text-align: center;
+      text-decoration: none;
+      /* A game can set its own --tile and --tile-text in _data/games.yml.
+         Otherwise it gets the next color in the rotation below. */
+      --tile: var(--pink);
+      --tile-text: #ffffff;
+      background: var(--tile);
+      color: var(--tile-text);
+      transform: rotate(var(--tilt));
+      box-shadow: 0 6px 0 #00000055;
+      animation: pop-in 0.45s cubic-bezier(.3, 1.6, .5, 1) backwards;
+      transition: transform 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* The colors and tilts repeat every four games, so new games get them automatically. */
+    .games li:nth-child(4n+2) a { --tile: var(--cyan);   --tile-text: #062B33; --tilt: 2deg; }
+    .games li:nth-child(4n+3) a { --tile: var(--lime);   --tile-text: #1E3300; --tilt: 1.5deg; }
+    .games li:nth-child(4n+4) a { --tile: var(--violet); --tile-text: #ffffff; --tilt: -2deg; }
+    .games li:nth-child(2) a { animation-delay: 0.08s; }
+    .games li:nth-child(3) a { animation-delay: 0.16s; }
+    .games li:nth-child(n+4) a { animation-delay: 0.24s; }
+
+    .games a:hover { animation: wiggle 0.4s ease-in-out; }
+    .games a:active { transform: rotate(0deg) scale(0.94); }
+    .games a:focus-visible { outline: 3px solid var(--text); outline-offset: 4px; }
+
+    @keyframes pop-in {
+      from { transform: rotate(var(--tilt)) scale(0.6); opacity: 0; }
+    }
+    @keyframes wiggle {
+      25% { transform: rotate(calc(var(--tilt) - 4deg)) scale(1.04); }
+      75% { transform: rotate(calc(var(--tilt) + 4deg)) scale(1.04); }
+    }
+
+    .icon { font-size: 2.4rem; line-height: 1; }
+    .name {
+      font-family: var(--pixel);
+      font-size: 0.7rem;
+      line-height: 1.6;
+      text-transform: uppercase;
+    }
+    .blurb { font-weight: 700; font-size: 0.9rem; line-height: 1.3; }
+
+    /* People who turn off motion on their phone get still tiles. */
+    @media (prefers-reduced-motion: reduce) {
+      .games a, .games a:hover { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="hero">
+      <h1>Game<br>Arcade</h1>
+      <img class="mascot" src="sprites/player-front-won.svg" alt="">
+    </div>
+    <ul class="games">
+      {% comment %}
+        Tiles show in the order of _data/games.yml. This first loop walks that list
+        and makes a tile for each game whose games/<folder>/index.html file exists.
+      {% endcomment %}
+      {% assign game_pages = site.static_files | where_exp: "file", "file.path contains '/games/'" | where: "name", "index.html" %}
+      {% for entry in site.data.games %}
+        {% assign folder = entry[0] %}
+        {% assign info = entry[1] %}
+        {% assign want = "/games/" | append: folder | append: "/index.html" %}
+        {% assign found = game_pages | where: "path", want %}
+        {% if found.size > 0 %}
+        <li>
+          <a href="{{ want | remove: 'index.html' | relative_url }}"{% if info.tile %} style="--tile: {{ info.tile }}; --tile-text: {{ info.tile_text | default: '#ffffff' }};"{% endif %}>
+            <span class="icon" aria-hidden="true">{{ info.icon | default: "🎮" }}</span>
+            <span class="name">{{ info.title | default: folder | replace: "-", " " }}</span>
+            {% if info.blurb %}<span class="blurb">{{ info.blurb }}</span>{% endif %}
+          </a>
+        </li>
+        {% endif %}
+      {% endfor %}
+      {% comment %}
+        A game missing from _data/games.yml still gets a tile, after the listed ones:
+        its folder name, so "space-blaster" shows as "space blaster".
+      {% endcomment %}
+      {% for file in game_pages %}
+        {% assign folder = file.path | remove: "/index.html" | split: "/" | last %}
+        {% unless site.data.games[folder] %}
+        <li>
+          <a href="{{ file.path | remove: 'index.html' | relative_url }}">
+            <span class="icon" aria-hidden="true">🎮</span>
+            <span class="name">{{ folder | replace: "-", " " }}</span>
+          </a>
+        </li>
+        {% endunless %}
+      {% endfor %}
+    </ul>
+  </main>
+</body>
+</html>
