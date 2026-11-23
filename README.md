@@ -3,7 +3,7 @@
 This repo holds browser games I design and build with HTML, CSS, and
 JavaScript. Every game is playable on the web at:
 
-**https://swu-tinker.github.io/swu-games/**
+**https://swu-tinker.github.io/games/**
 
 ## How games are set up
 
@@ -26,7 +26,7 @@ The arcade home page finds every game folder on its own. A new game shows up
 A game's link is its folder name:
 
 ```
-https://swu-tinker.github.io/swu-games/games/snake/
+https://swu-tinker.github.io/games/games/snake/
 ```
 
 Design notes and plans for bigger games live in `plans/`.

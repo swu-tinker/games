@@ -2,7 +2,7 @@
 
 This is the user's personal game repo. It hosts browser games they design for
 fun, built from their own ideas and plans.
-GitHub Pages publishes it at https://swu-tinker.github.io/swu-games/
+GitHub Pages publishes it at https://swu-tinker.github.io/games/
 
 The user is a teacher and designer, not an engineer. Explain things in plain
 English.

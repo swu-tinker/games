@@ -123,7 +123,7 @@ pull request.
 Check the GitHub Pages build until it finishes (usually 1 to 2 minutes):
 
 ```bash
-gh api repos/swu-tinker/swu-games/pages/builds/latest --jq '.status'
+gh api repos/swu-tinker/games/pages/builds/latest --jq '.status'
 ```
 
 - `built`: open the live game link and check that it loads.
@@ -134,8 +134,8 @@ gh api repos/swu-tinker/swu-games/pages/builds/latest --jq '.status'
 
 Tell the user:
 
-- The live 3D game link: `https://swu-tinker.github.io/swu-games/games/<folder>/`
-- The arcade link: `https://swu-tinker.github.io/swu-games/`
+- The live 3D game link: `https://swu-tinker.github.io/games/games/<folder>/`
+- The arcade link: `https://swu-tinker.github.io/games/`
 - The note from NOTES.md: what looks different in 3D, what each emoji became,
   and any rule you had to change.
 - Anything you could not test.

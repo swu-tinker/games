@@ -5,7 +5,7 @@ Players ride from transfer station to transfer station, answer 10 questions,
 and watch their train move along a strip map of the line they're on.
 
 **Status:** Phase 1 is live at
-https://swu-tinker.github.io/swu-games/games/stand-clear/
+https://swu-tinker.github.io/games/games/stand-clear/
 Phase 2 starts when you say go.
 
 ## Players learn three things
